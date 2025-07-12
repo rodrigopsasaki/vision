@@ -1,0 +1,28 @@
+# Node
+node_modules/
+dist/
+pnpm-lock.yaml
+
+# Test outputs
+coverage/
+*.log
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Env/config
+.env
+.env.*
+
+# Editor noise
+.vscode/
+.idea/
+
+# misc
+*.tsbuildinfo
+node_modules/
+dist/
+*.log
+.DS_Store
+.env

@@ -1,0 +1,39 @@
+
+{
+  "name": "vision",
+  "version": "0.1.0",
+  "description": "Canonical context and structured observability for Node.js",
+  "license": "MIT",
+  "author": "Rodrigo Sasaki",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rodrigosasaki/vision.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rodrigosasaki/vision/issues"
+  },
+  "homepage": "https://github.com/rodrigosasaki/vision#readme",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "test": "vitest"
+  },
+  "keywords": [
+    "observability",
+    "structured-logging",
+    "context",
+    "async-hooks",
+    "canonical-logs",
+    "typescript",
+    "nodejs"
+  ],
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}
