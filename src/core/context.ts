@@ -1,5 +1,6 @@
-import { AsyncLocalStorage } from 'async_hooks'
-import { VisionContext } from './types'
+import { AsyncLocalStorage } from "async_hooks"
+
+import { VisionContext } from "./types"
 
 const storage = new AsyncLocalStorage<VisionContext>()
 
@@ -9,7 +10,7 @@ export function getContextStore() {
 
 export function getContext(): VisionContext {
   const ctx = storage.getStore()
-  if (!ctx) throw new Error('No active vision context')
+  if (!ctx) throw new Error("No active vision context")
   return ctx
 }
 

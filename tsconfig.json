@@ -3,6 +3,7 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "Node",
+    "baseUrl": "./src",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
@@ -11,5 +12,5 @@
     "declaration": true,
     "outDir": "dist"
   },
-  "include": ["src"]
+  "include": ["src", "test", "*.config.ts"]
 }

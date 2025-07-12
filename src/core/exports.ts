@@ -1,5 +1,5 @@
-import { VisionContext } from './types'
-import { getContext } from './context'
+import { getContext } from "./context"
+import { VisionContext } from "./types"
 
 const exporters = new Map<string, (ctx: VisionContext) => void>()
 
