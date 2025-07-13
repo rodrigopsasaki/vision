@@ -30,7 +30,7 @@
 Install:
 
 ```bash
-pnpm add @rodrigopsasaki/vision
+npm add @rodrigopsasaki/vision
 ```
 
 Wrap your unit of work:
@@ -126,7 +126,7 @@ All vision APIs are fully testable and isolated per `vision.with()` scope.
 Run tests with:
 
 ```bash
-pnpm test
+npm test
 ```
 
 ---
