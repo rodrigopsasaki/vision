@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from "uuid"
+import { generateId } from "../utils/generateId"
 
 import { getContextStore } from "./context"
 import { visionSet, visionGet, visionPush, visionMerge, getContext } from "./context"
@@ -12,7 +12,7 @@ export async function visionWith<T>(
   const normalized: VisionInitOptions = typeof opts === "string" ? { name: opts } : opts
 
   const context: VisionContext = {
-    id: uuidv4(),
+    id: generateId(),
     timestamp: new Date().toISOString(),
     name: normalized.name,
     scope: normalized.scope,
