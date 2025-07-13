@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid"
 import { getContextStore } from "./context"
 import type { VisionContext, VisionInitOptions } from "./types"
-import { visionSet, visionGet, getContext } from "./context"
+import { visionSet, visionGet, visionPush, visionMerge, getContext } from "./context"
 import { exportTo, registerExporter } from "./exports"
 
 export async function visionWith<T>(
@@ -27,6 +27,8 @@ export const vision = {
   with: visionWith,
   set: visionSet,
   get: visionGet,
+  push: visionPush,
+  merge: visionMerge,
   context: getContext,
   exportTo,
   registerExporter,
