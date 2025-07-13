@@ -30,7 +30,7 @@
 Install:
 
 ```bash
-npm add @rodrigopsasaki/vision
+npm install @rodrigopsasaki/vision
 ```
 
 Wrap your unit of work:
