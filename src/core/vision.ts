@@ -1,30 +1,33 @@
 import { v4 as uuidv4 } from "uuid"
-
 import { getContextStore } from "./context"
-import { VisionContext } from "./types"
+import type { VisionContext, VisionInitOptions } from "./types"
+import { visionSet, visionGet, getContext } from "./context"
+import { exportTo, registerExporter } from "./exports"
 
-export async function vision<T>(
-  nameOrOpts:
-    | string
-    | {
-        name: string
-        scope?: string
-        source?: string
-        initial?: Record<string, any>
-      },
+export async function visionWith<T>(
+  opts: string | VisionInitOptions,
   fn: () => Promise<T>,
 ): Promise<T> {
-  const opts = typeof nameOrOpts === "string" ? { name: nameOrOpts } : nameOrOpts
+  const normalized: VisionInitOptions = typeof opts === "string" ? { name: opts } : opts
 
   const context: VisionContext = {
     id: uuidv4(),
     timestamp: new Date().toISOString(),
-    name: opts.name,
-    scope: opts.scope,
-    source: opts.source,
-    data: new Map(Object.entries(opts.initial || {})),
+    name: normalized.name,
+    scope: normalized.scope,
+    source: normalized.source,
+    data: new Map(Object.entries(normalized.initial || {})),
   }
 
   const store = getContextStore()
   return store.run(context, fn)
+}
+
+export const vision = {
+  with: visionWith,
+  set: visionSet,
+  get: visionGet,
+  context: getContext,
+  exportTo,
+  registerExporter,
 }
