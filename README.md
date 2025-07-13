@@ -1,21 +1,127 @@
 # vision
 
-> Canonical context and structured observability for Node.js
+**Structured observability. Context-aware. Exportable anywhere.**
 
-![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
-![Build](https://img.shields.io/github/actions/workflow/status/rodrigosasaki/vision/test.yml?branch=main)
-![Version](https://img.shields.io/npm/v/vision?label=version)
-![CI](https://github.com/rodrigopsasaki/vision/actions/workflows/checks.yml/badge.svg)
+`vision` is a minimal runtime context system built on `AsyncLocalStorage`, designed to collect structured metadata across async calls and export it wherever you need — logs, telemetry, debugging, or beyond.
 
 ---
 
-**vision** is a small but powerful library for execution-scoped metadata capture.  
-It uses `AsyncLocalStorage` to track structured key-value data through async flows — enabling canonical logs, portable exporters, and deep introspection of what your system _actually_ did.
+## ✨ Features
+
+- 📦 Lightweight: no runtime deps
+- 🧠 Context-aware: built on `AsyncLocalStorage`
+- 🔁 Fully async-safe: works across `await`, `Promise.then`, and nested scopes
+- 🧰 Extensible: pluggable exporters (e.g., for Pino, Winston, OTEL)
+- 🧪 Dead simple to test
 
 ---
 
-## 🚀 Install
+## 🚀 Quick Start
+
+Install:
 
 ```bash
 pnpm add vision
 ```
+
+Wrap your unit of work:
+
+```ts
+import { vision } from "vision"
+
+await vision.with("flag-check", async () => {
+  vision.set("user.id", 123)
+  vision.push("flags.evaluated", { name: "boost", result: true })
+
+  logSomething()
+  vision.exportTo("logger")
+})
+```
+
+---
+
+## 🧱 API
+
+```ts
+await vision.with(name, asyncFn)
+```
+
+Starts a new isolated context. Adds metadata like `id`, `timestamp`, and `name`.
+
+```ts
+vision.set("key", value)
+```
+
+Stores a scalar or object. Overwrites existing value.
+
+```ts
+vision.get("key")
+```
+
+Retrieves a value. Throws if called outside `vision.with()`.
+
+```ts
+vision.push("key", value)
+```
+
+Appends to a list. Creates a list if needed. Overwrites non-lists.
+
+```ts
+vision.merge("key", value)
+```
+
+Merges into a map. Creates map if needed. Overwrites non-maps.
+
+```ts
+vision.context()
+```
+
+Returns the current `VisionContext`, including `.id`, `.timestamp`, and `.data` (`Map<string, unknown>`).
+
+```ts
+vision.registerExporter("name", fn)
+vision.exportTo("name")
+```
+
+Registers and invokes an exporter with the current context.
+
+---
+
+## 🔌 Logger Integration
+
+Works with any logger. Example: **Pino**:
+
+```ts
+const logger = pino({
+  bindings() {
+    return Object.fromEntries(vision.context().data)
+  },
+})
+```
+
+Or **Winston**:
+
+```ts
+const enrich = winston.format((info) => {
+  Object.assign(info, Object.fromEntries(vision.context().data))
+  return info
+})
+```
+
+---
+
+## 🧪 Testing
+
+All vision APIs are fully testable and isolated per `vision.with()` scope.
+
+Run tests with:
+
+```bash
+pnpm test
+```
+
+---
+
+## 📋 License
+
+MIT © [Rodrigo Sasaki](https://github.com/rodrigopsasaki)
