@@ -5,6 +5,7 @@
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Build](https://img.shields.io/github/actions/workflow/status/rodrigosasaki/vision/test.yml?branch=main)
 ![Version](https://img.shields.io/npm/v/vision?label=version)
+![CI](https://github.com/rodrigopsasaki/vision/actions/workflows/checks.yml/badge.svg)
 
 ---
 
