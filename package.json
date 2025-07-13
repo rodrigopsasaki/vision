@@ -1,18 +1,18 @@
 {
   "name": "@rodrigopsasaki/vision",
   "type": "module",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Canonical context and structured observability for Node.js",
   "license": "MIT",
   "author": "Rodrigo Sasaki",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rodrigosasaki/vision.git"
+    "url": "git+https://github.com/rodrigopsasaki/vision.git"
   },
   "bugs": {
-    "url": "https://github.com/rodrigosasaki/vision/issues"
+    "url": "https://github.com/rodrigopsasaki/vision/issues"
   },
-  "homepage": "https://github.com/rodrigosasaki/vision#readme",
+  "homepage": "https://github.com/rodrigopsasaki/vision#readme",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
