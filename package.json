@@ -1,5 +1,5 @@
 {
-  "name": "vision",
+  "name": "@rodrigopsasaki/vision",
   "type": "module",
   "version": "0.1.0",
   "description": "Canonical context and structured observability for Node.js",

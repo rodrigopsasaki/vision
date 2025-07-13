@@ -34,13 +34,13 @@
 Install:
 
 ```bash
-pnpm add vision
+pnpm add @rodrigopsasaki/vision
 ```
 
 Wrap your unit of work:
 
 ```ts
-import { vision } from "vision"
+import { vision } from "@rodrigopsasaki/vision"
 
 await vision.with("flag-check", async () => {
   vision.set("user.id", 123)
