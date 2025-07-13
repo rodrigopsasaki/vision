@@ -1,3 +1,16 @@
+![CI](https://github.com/rodrigopsasaki/vision/actions/workflows/checks.yml/badge.svg)
+![License](https://img.shields.io/github/license/rodrigopsasaki/vision)
+
+<!--
+![Version](https://img.shields.io/npm/v/vision.svg)
+![Downloads](https://img.shields.io/npm/dm/vision.svg)
+![Install size](https://packagephobia.com/badge?p=vision)
+-->
+
+![TypeScript](https://img.shields.io/badge/TypeScript-Strict-blue.svg)
+![Coverage](https://img.shields.io/badge/Coverage-Coming--Soon-yellow)
+![Open Issues](https://img.shields.io/github/issues/rodrigopsasaki/vision)
+
 # vision
 
 **Structured observability. Context-aware. Exportable anywhere.**
