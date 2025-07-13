@@ -1,8 +1,9 @@
 import { v4 as uuidv4 } from "uuid"
+
 import { getContextStore } from "./context"
-import type { VisionContext, VisionInitOptions } from "./types"
 import { visionSet, visionGet, visionPush, visionMerge, getContext } from "./context"
 import { exportTo, registerExporter } from "./exports"
+import type { VisionContext, VisionInitOptions } from "./types"
 
 export async function visionWith<T>(
   opts: string | VisionInitOptions,

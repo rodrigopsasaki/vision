@@ -20,6 +20,7 @@
   ],
   "scripts": {
     "lint": "eslint ./src ./test --ext .ts",
+    "lint:fix": "eslint ./src ./test --ext .ts --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "build": "tsc",

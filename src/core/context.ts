@@ -1,5 +1,5 @@
-import type { VisionContext } from "./types"
 import { visionStore } from "./global"
+import type { VisionContext } from "./types"
 
 export function getContextStore() {
   return visionStore
