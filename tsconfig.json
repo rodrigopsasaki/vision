@@ -10,7 +10,8 @@
     "strict": true,
     "resolveJsonModule": true,
     "declaration": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": ["vitest/globals"]
   },
   "include": ["src", "test", "*.config.ts"]
 }
