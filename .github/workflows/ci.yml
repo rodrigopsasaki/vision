@@ -13,26 +13,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Enable pnpm via corepack
+        run: corepack enable
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "pnpm"
 
-      - name: Install pnpm
-        run: npm install -g pnpm
-
       - name: Install dependencies
         run: pnpm install
 
       - name: Build
-        run: turbo run build
+        run: pnpm exec turbo run build
 
       - name: Lint
-        run: turbo run lint
+        run: pnpm exec turbo run lint
 
       - name: Test
-        run: turbo run test
+        run: pnpm exec turbo run test
 
       - name: Spellcheck
-        run: turbo run spellcheck
+        run: pnpm exec turbo run spellcheck
