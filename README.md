@@ -182,8 +182,6 @@ Run tests:
 turbo run test
 ```
 
----
-
 ## 💡 Philosophy
 
 Vision is a straightforward idea: carry context through your program in a consistent, structured way.
@@ -203,6 +201,10 @@ The goal is clarity:
 Good context makes observability easier.
 Good defaults make context easier.
 That’s all this is.
+
+## 🙏 Acknowledgments
+
+Special thanks to [Ryan McGrath](https://github.com/zoltrain), the brilliant Go-savvy engineer who first introduced me to the power of propagating structured context across services. This project is a direct descendant of those conversations — just ported to a new ecosystem with the same care for clarity, pragmatism and the value of sharing good ideas.
 
 ## ⚖️ License
 
