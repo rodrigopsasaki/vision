@@ -45,8 +45,3 @@ turbo run test
 ## License
 
 MIT © [Rodrigo Sasaki](https://github.com/rodrigopsasaki)
-
-```
-
----
-```
