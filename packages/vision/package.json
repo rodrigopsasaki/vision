@@ -1,0 +1,62 @@
+{
+  "name": "@rodrigopsasaki/vision",
+  "type": "module",
+  "version": "0.1.6",
+  "description": "Canonical context and structured observability for Node.js",
+  "license": "MIT",
+  "author": "Rodrigo Sasaki",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rodrigopsasaki/vision.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rodrigopsasaki/vision/issues"
+  },
+  "homepage": "https://github.com/rodrigopsasaki/vision#readme",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "lint": "eslint src test --ext .ts",
+    "lint:fix": "eslint src test --ext .ts --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "spellcheck": "cspell '**/*.{ts,md,json}'",
+    "build": "tsup src/index.ts --format esm --dts --out-dir dist",
+    "dev": "tsup src/index.ts --format esm --dts --watch",
+    "test": "vitest run",
+    "test:dev": "vitest"
+  },
+  "keywords": [
+    "observability",
+    "structured-logging",
+    "context",
+    "async-hooks",
+    "canonical-logs",
+    "typescript",
+    "nodejs"
+  ],
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.36.0",
+    "@typescript-eslint/parser": "^8.36.0",
+    "cspell": "^9.1.5",
+    "eslint": "^9.31.0",
+    "eslint-plugin-import": "^2.32.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.2",
+    "prettier": "^3.6.2",
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.3",
+    "turbo": "^2.5.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}

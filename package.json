@@ -1,8 +1,10 @@
 {
   "name": "vision-monorepo",
   "private": true,
+  "type": "module",
   "packageManager": "pnpm@8.15.4",
   "devDependencies": {
+    "lint-staged": "^16.1.2",
     "turbo": "^2.5.4"
   }
 }

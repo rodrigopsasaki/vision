@@ -1,0 +1,7 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": ["uuidv4", "ctx", "visiontest", "sasaki", "rodrigopsasaki"],
+  "ignorePaths": ["dist", "node_modules"],
+  "ignoreRegExpList": ["/.*\\.test\\.ts$/"]
+}
