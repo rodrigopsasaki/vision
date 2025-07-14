@@ -17,8 +17,7 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.js"
+      "import": "./dist/index.js"
     }
   },
   "files": [
@@ -29,8 +28,8 @@
     "lint:fix": "eslint ./src ./test --ext .ts --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "build": "tsc",
-    "dev": "tsx watch src/index.ts",
+    "build": "tsup src/index.ts --format esm --dts --out-dir dist",
+    "dev": "tsup src/index.ts --format esm --dts --watch",
     "test": "vitest",
     "spellcheck": "cspell '**/*.{ts,md,json}'"
   },
@@ -53,6 +52,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.1.2",
     "prettier": "^3.6.2",
+    "tsup": "^8.5.0",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
