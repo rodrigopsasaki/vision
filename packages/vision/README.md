@@ -1,4 +1,4 @@
-![CI](https://github.com/rodrigopsasaki/vision/actions/workflows/checks.yml/badge.svg)
+![CI](https://github.com/rodrigopsasaki/vision/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/github/license/rodrigopsasaki/vision)
 ![Version](https://img.shields.io/npm/v/@rodrigopsasaki/vision.svg)
 ![Downloads](https://img.shields.io/npm/dm/@rodrigopsasaki/vision.svg)
