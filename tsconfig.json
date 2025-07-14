@@ -1,14 +1,18 @@
 {
   "compilerOptions": {
-    "rootDir": "./src",
-    "outDir": "./dist",
-    "declaration": true,
-    "declarationDir": "./dist",
-    "emitDeclarationOnly": false,
-    "module": "ES2020",
+    "target": "ES2020",
+    "module": "ESNext",
     "moduleResolution": "Bundler",
-    "target": "ES2020"
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": false,
+    "emitDeclarationOnly": true,
+    "noEmit": false
   },
-  "include": ["src"],
-  "exclude": ["vitest.config.ts", "test", "node_modules", "dist"]
+  "include": ["src"]
 }
