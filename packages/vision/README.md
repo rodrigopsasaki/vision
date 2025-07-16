@@ -9,128 +9,285 @@
 
 # vision
 
-**Structured observability. Context-aware. Exportable anywhere.**
-
-`vision` is a minimal runtime context system built on `AsyncLocalStorage`, designed to collect structured metadata across async calls and export it wherever you need — logs, telemetry, debugging, or beyond.
+> Structured observability, modeled around intent — not output.
 
 ---
 
-## ✨ Features
+## You don’t need more logs
 
-- 📦 Lightweight: no runtime deps
-- 🧠 Context-aware: built on `AsyncLocalStorage`
-- 🔁 Fully async-safe: works across `await`, `Promise.then`, and nested scopes
-- 🧰 Extensible: pluggable exporters (e.g., for Pino, Winston, OTEL)
-- 🧪 Dead simple to test
+You need context.
+
+You need to know:
+
+- What just happened
+- What data was involved
+- What the outcome was
+
+But most systems log like this:
 
 ---
 
-## 🚀 Quick Start
+### Three stages of observability
 
-Install:
+Let’s say you’re processing a shopping cart.
+
+#### 1. Naive logging
+
+```ts
+console.log("starting cart job");
+console.log("loaded cart", cart.id);
+console.log("charging", cart.total);
+console.log("done", { status: "ok" });
+```
+
+This tells a story — but it’s whispering.
+No IDs. No continuity. Just bursts of text into the void.
+Now imagine billions of these.
+Good luck finding the one you care about.
+
+---
+
+#### 2. Disciplined logging
+
+```ts
+console.log("start", { user_id, correlation_id });
+console.log("loaded cart", { cart_id, correlation_id });
+console.log("charging", { amount, correlation_id });
+console.log("done", { cart_id, status }); // <-- whoops, no user_id, no correlation_id
+```
+
+You’re trying. You’re threading a `correlation_id`.
+You’re passing `user_id` everywhere manually.
+Until someone forgets. And now that one log line is invisible.
+
+---
+
+#### 3. Structured context with Vision
+
+```ts
+await vision.observe("cart.process", async () => {
+  vision.set("user_id", userId);
+  vision.set("correlation_id", req.headers["x-correlation-id"]);
+
+  const cart = await db.getCart(userId);
+  vision.set("cart_id", cart.id);
+
+  const result = await chargeCard(cart);
+  vision.set("charge_status", result.status);
+
+  await sendConfirmation(userId);
+  vision.set("confirmation", "sent");
+});
+```
+
+Now everything lives in a scoped context.
+No repetition. No missing keys.
+Just a clean canonical event:
+
+```json
+{
+  "name": "cart.process",
+  "timestamp": "...",
+  "data": {
+    "user_id": "u123",
+    "correlation_id": "abc-456",
+    "cart_id": "c789",
+    "charge_status": "success",
+    "confirmation": "sent"
+  }
+}
+```
+
+---
+
+## Real-world usage
+
+Vision is meant to disappear into your system. Here's what it looks like in real code:
+
+```ts
+await vision.observe("order.fulfillment", async () => {
+  vision.set("user_id", user.id);
+  vision.set("order_id", order.id);
+
+  await fulfillOrder(order);
+});
+```
+
+```ts
+// fulfillment.ts
+import { vision } from "@rodrigopsasaki/vision";
+
+export async function fulfillOrder(order) {
+  await pickItems(order);
+  await packItems(order);
+  await shipOrder(order);
+}
+
+async function pickItems(order) {
+  // ...picking logic...
+  vision.push("events", "picked");
+}
+
+async function packItems(order) {
+  // ...packing logic...
+  vision.push("events", "packed");
+  vision.merge("dimensions", { weight: "2.1kg" }); // replaces a log line
+}
+
+async function shipOrder(order) {
+  // ...shipping logic...
+  vision.push("events", "shipped");
+  vision.merge("shipment", {
+    carrier: "DHL",
+    tracking: "abc123",
+  });
+}
+```
+
+You don’t pass context around.
+You don’t log manually.
+You just describe what happened.
+
+Vision collects it — then emits exactly one event.
+
+---
+
+## Install
 
 ```bash
-npm install @rodrigopsasaki/vision
-```
-
-Wrap your unit of work:
-
-```ts
-import { vision } from "@rodrigopsasaki/vision"
-
-await vision.with("flag-check", async () => {
-  vision.set("user.id", 123)
-  vision.push("flags.evaluated", { name: "boost", result: true })
-
-  logSomething()
-  vision.exportTo("logger")
-})
+npm add @rodrigopsasaki/vision
 ```
 
 ---
 
-## 🧱 API
+## Quick start
+
+You don’t need to configure anything to start using Vision.
 
 ```ts
-await vision.with(name, asyncFn)
+import { vision } from "@rodrigopsasaki/vision";
+
+await vision.observe("my.workflow", async () => {
+  vision.set("step", "one");
+  vision.set("status", "ok");
+});
 ```
 
-Starts a new isolated context. Adds metadata like `id`, `timestamp`, and `name`.
+That’s it.
+No setup. No boilerplate. No `init()` call required.
+Vision runs with a default console exporter out of the box.
 
-```ts
-vision.set("key", value)
-```
-
-Stores a scalar or object. Overwrites existing value.
-
-```ts
-vision.get("key")
-```
-
-Retrieves a value. Throws if called outside `vision.with()`.
-
-```ts
-vision.push("key", value)
-```
-
-Appends to a list. Creates a list if needed. Overwrites non-lists.
-
-```ts
-vision.merge("key", value)
-```
-
-Merges into a map. Creates map if needed. Overwrites non-maps.
-
-```ts
-vision.context()
-```
-
-Returns the current `VisionContext`, including `.id`, `.timestamp`, and `.data` (`Map<string, unknown>`).
-
-```ts
-vision.registerExporter("name", fn)
-vision.exportTo("name")
-```
-
-Registers and invokes an exporter with the current context.
+When you're ready to customize behavior — like sending events to Datadog or disabling console logs — you can call `vision.init()` to register your own exporters.
 
 ---
 
-## 🔌 Logger Integration
+## Working with context
 
-Works with any logger. Example: **Pino**:
-
-```ts
-const logger = pino({
-  bindings() {
-    return Object.fromEntries(vision.context().data)
-  },
-})
-```
-
-Or **Winston**:
+Vision gives you a few simple tools:
 
 ```ts
-const enrich = winston.format((info) => {
-  Object.assign(info, Object.fromEntries(vision.context().data))
-  return info
-})
+vision.set("foo", "bar");
+vision.get("foo"); // "bar"
+
+vision.push("tags", "new");
+vision.push("tags", "priority");
+
+vision.merge("meta", { version: "1.2.3" });
+vision.merge("meta", { region: "us-east-1" });
 ```
+
+Everything you set is scoped to the active `observe()` block.
+Accessing context outside that block throws — by design.
 
 ---
 
-## 🧪 Testing
+## You don’t need a correlation ID
 
-All vision APIs are fully testable and isolated per `vision.with()` scope.
+Most systems bolt on `correlation_id` to make up for lost context.
+Vision doesn’t lose context in the first place.
 
-Run tests with:
+You don’t thread a request ID.
+You don’t decorate every log call.
+You just enter an `observe()` block — and Vision handles the scope.
 
-```bash
-npm test
+Want to tag with a trace ID from upstream? Do it once:
+
+```ts
+await vision.observe("http.request", async () => {
+  vision.set("trace_id", req.headers["x-trace-id"]);
+  // do work
+});
 ```
+
+You get a unique ID for free.
+But you won’t need it to hold everything together anymore.
 
 ---
 
-## 📋 License
+## Controlling output
+
+By default, Vision logs a single event to the console.
+But you can register your own exporters.
+
+### Add exporters
+
+Exporters are side-effect hooks that run at the end of a context — on success or error.
+
+```ts
+vision.registerExporter({
+  name: "datadog",
+  success: (ctx) => sendToDatadog(ctx),
+  error: (ctx, err) => sendErrorToDatadog(ctx, err),
+});
+```
+
+If you skip `error()`, Vision falls back to `success()` even on failure — so you’ll still get the data.
+
+---
+
+### Customize at startup
+
+You can register exporters when you initialize:
+
+```ts
+vision.init({
+  exporters: [
+    {
+      name: "stdout",
+      success: (ctx) => {
+        console.log("event:", ctx.name, Object.fromEntries(ctx.data.entries()));
+      },
+    },
+  ],
+});
+```
+
+You can also remove exporters later:
+
+```ts
+vision.unregisterExporter("stdout");
+```
+
+For now, the default console exporter can’t be removed — but we’ll probably support that soon.
+
+---
+
+## Philosophy
+
+Vision replaces many logs with one idea:
+
+> “This happened. Here's everything we know.”
+
+It’s not a log formatter.
+It’s a structured, observable boundary.
+
+You stop logging every heartbeat.
+You start capturing truth.
+
+## ⚖️ License
 
 MIT © [Rodrigo Sasaki](https://github.com/rodrigopsasaki)
+
+```
+
+```

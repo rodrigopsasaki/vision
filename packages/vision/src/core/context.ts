@@ -1,44 +1,47 @@
-import { visionStore } from "./global"
-import type { VisionContext } from "./types"
+import { getContextStore } from "./global";
+import type { VisionContext } from "./types";
 
-export function getContextStore() {
-  return visionStore
-}
-
+/**
+ * Retrieves the current active vision context.
+ * Throws an error if called outside of a vision context scope.
+ */
 export function getContext(): VisionContext {
-  const ctx = visionStore.getStore()
-  if (!ctx) {
-    throw new Error("No active vision context")
+  const context = getContextStore().getStore();
+  if (!context) {
+    throw new Error("No active vision context");
   }
-  return ctx
+  return context;
 }
 
+/**
+ * Sets a key-value pair on the current vision context's data map.
+ */
 export function visionSet<K extends string, V = unknown>(key: K, value: V): void {
-  getContext().data.set(key, value)
+  getContext().data.set(key, value);
 }
 
+/**
+ * Retrieves a value from the current vision context's data map.
+ */
 export function visionGet<T = unknown>(key: string): T | undefined {
-  return getContext().data.get(key) as T | undefined
+  return getContext().data.get(key) as T | undefined;
 }
 
+/**
+ * Pushes a value into an array stored at the given key in the context's data map.
+ * Initializes the array if it doesn't exist yet.
+ */
 export function visionPush<T = unknown>(key: string, value: T): void {
-  const ctx = getContext()
-  const current = ctx.data.get(key)
-
-  if (Array.isArray(current)) {
-    current.push(value)
-  } else {
-    ctx.data.set(key, [value])
-  }
+  const list = (getContext().data.get(key) as T[] | undefined) ?? [];
+  list.push(value);
+  getContext().data.set(key, list);
 }
 
-export function visionMerge<T extends Record<string, unknown>>(key: string, value: T): void {
-  const ctx = getContext()
-  const current = ctx.data.get(key)
-
-  if (typeof current === "object" && current !== null && !Array.isArray(current)) {
-    ctx.data.set(key, { ...current, ...value })
-  } else {
-    ctx.data.set(key, value)
-  }
+/**
+ * Merges a record into the existing object at the given key in the context's data map.
+ * Initializes the object if it doesn't exist yet.
+ */
+export function visionMerge<K extends string, V = unknown>(key: K, value: Record<string, V>): void {
+  const existing = (getContext().data.get(key) as Record<string, V> | undefined) ?? {};
+  getContext().data.set(key, { ...existing, ...value });
 }
