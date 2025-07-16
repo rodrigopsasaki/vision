@@ -13,9 +13,7 @@
 
 ---
 
-## You don’t need more logs
-
-You need context.
+## You don’t need more logs, you need context.
 
 You need to know:
 
@@ -287,7 +285,3 @@ You start capturing truth.
 ## ⚖️ License
 
 MIT © [Rodrigo Sasaki](https://github.com/rodrigopsasaki)
-
-```
-
-```

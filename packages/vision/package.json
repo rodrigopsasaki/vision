@@ -1,7 +1,7 @@
 {
   "name": "@rodrigopsasaki/vision",
   "type": "module",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Canonical context and structured observability for Node.js",
   "license": "MIT",
   "author": "Rodrigo Sasaki",
