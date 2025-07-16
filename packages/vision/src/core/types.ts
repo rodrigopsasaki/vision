@@ -39,3 +39,14 @@ export interface VisionInitOptions {
   /** Optional key-value data to initialize the context with */
   initial?: Record<string, unknown>
 }
+
+/**
+ * Interface for implementing custom exporters that consume vision contexts.
+ */
+export interface VisionExporter {
+  /** Descriptive name of the exporter (e.g. 'console', 'pino') */
+  name: string
+
+  /** Function that receives and handles a finalized vision context */
+  export: (ctx: VisionContext) => void
+}

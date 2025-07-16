@@ -26,8 +26,8 @@
   "scripts": {
     "lint": "eslint src test --ext .ts",
     "lint:fix": "eslint src test --ext .ts --fix",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format": "prettier --config ../../.prettierrc --ignore-path ../../.prettierignore --write .",
+    "format:check": "prettier --config ../../.prettierrc --ignore-path ../../.prettierignore --check .",
     "spellcheck": "cspell '**/*.{ts,md,json}'",
     "build": "tsup src/index.ts --format esm --dts --out-dir dist",
     "dev": "tsup src/index.ts --format esm --dts --watch",
