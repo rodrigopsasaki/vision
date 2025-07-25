@@ -1,8 +1,8 @@
 {
-  "name": "@rodrigopsasaki/vision-datadog-exporter",
+  "name": "@rodrigopsasaki/datadog-exporter",
   "type": "module",
-  "version": "0.1.1",
-  "description": "Datadog exporter for @rodrigopsasaki/vision - structured observability for Node.js",
+  "version": "0.1.0",
+  "description": "Comprehensive Datadog exporter for structured observability data",
   "license": "MIT",
   "author": "Rodrigo Sasaki",
   "repository": {
@@ -36,16 +36,19 @@
     "test:coverage": "vitest run --coverage"
   },
   "keywords": [
-    "vision",
     "datadog",
     "exporter",
     "observability",
-    "structured-logging",
-    "context",
+    "metrics",
+    "logs",
+    "traces",
+    "monitoring",
     "typescript",
     "nodejs"
   ],
   "dependencies": {
+    "@datadog/browser-logs": "^6.0.0",
+    "@datadog/browser-rum": "^5.0.0",
     "node-fetch": "^3.3.2",
     "zod": "^3.22.4"
   },
@@ -69,4 +72,4 @@
   "peerDependencies": {
     "@rodrigopsasaki/vision": "workspace:*"
   }
-}
+} 
