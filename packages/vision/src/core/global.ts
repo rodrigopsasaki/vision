@@ -17,12 +17,52 @@ declare global {
 // Initialize the global object if needed
 globalThis.__vision__ ??= {};
 
+/**
+ * Initializes the vision runtime with optional custom configuration.
+ * 
+ * This function sets up the global vision runtime state, including the default
+ * exporters. If no options are provided, it uses the default console exporter.
+ * 
+ * @param options - Optional runtime configuration
+ * 
+ * @example
+ * ```typescript
+ * // Initialize with default console exporter
+ * initVisionRuntime();
+ * 
+ * // Initialize with custom exporters
+ * initVisionRuntime({
+ *   exporters: [
+ *     {
+ *       name: "custom",
+ *       success: (ctx) => console.log("Success:", ctx),
+ *       error: (ctx, err) => console.error("Error:", ctx, err)
+ *     }
+ *   ]
+ * });
+ * ```
+ */
 export function initVisionRuntime(options?: Partial<VisionRuntimeState>) {
   globalThis.__vision__.runtimeState = {
     exporters: (options?.exporters ?? [defaultConsoleExporter]).map(createExporter),
   };
 }
 
+/**
+ * Gets the current vision runtime state, initializing it if needed.
+ * 
+ * This function ensures the vision runtime is properly initialized and returns
+ * the current state. If no runtime state exists, it automatically initializes
+ * with default settings.
+ * 
+ * @returns The current vision runtime state
+ * 
+ * @example
+ * ```typescript
+ * const runtime = getRuntimeState();
+ * console.log("Active exporters:", runtime.exporters.length);
+ * ```
+ */
 export function getRuntimeState(): VisionRuntimeState {
   if (!globalThis.__vision__.runtimeState) {
     initVisionRuntime();
@@ -33,6 +73,21 @@ export function getRuntimeState(): VisionRuntimeState {
 
 /**
  * Returns the global vision AsyncLocalStorage instance, initializing it if needed.
+ * 
+ * This function manages the global AsyncLocalStorage that maintains vision
+ * context across async operations. It ensures thread-safe context isolation
+ * for concurrent operations.
+ * 
+ * @returns The AsyncLocalStorage instance for vision contexts
+ * 
+ * @example
+ * ```typescript
+ * const store = getContextStore();
+ * const context = store.getStore();
+ * if (context) {
+ *   console.log("Current context:", context.name);
+ * }
+ * ```
  */
 export function getContextStore(): AsyncLocalStorage<VisionContext> {
   if (!globalThis.__vision__.contextStore) {

@@ -13,7 +13,7 @@
 
 ---
 
-## You don’t need more logs, you need context.
+## You don't need more logs, you need context.
 
 You need to know:
 
@@ -27,7 +27,7 @@ But most systems log like this:
 
 ### Three stages of observability
 
-Let’s say you’re processing a shopping cart.
+Let's say you're processing a shopping cart.
 
 #### 1. Naive logging
 
@@ -38,7 +38,7 @@ console.log("charging", cart.total);
 console.log("done", { status: "ok" });
 ```
 
-This tells a story — but it’s whispering.
+This tells a story — but it's whispering.
 No IDs. No continuity. Just bursts of text into the void.
 Now imagine billions of these.
 Good luck finding the one you care about.
@@ -54,8 +54,8 @@ console.log("charging", { amount, correlation_id });
 console.log("done", { cart_id, status }); // <-- whoops, no user_id, no correlation_id
 ```
 
-You’re trying. You’re threading a `correlation_id`.
-You’re passing `user_id` everywhere manually.
+You're trying. You're threading a `correlation_id`.
+You're passing `user_id` everywhere manually.
 Until someone forgets. And now that one log line is invisible.
 
 ---
@@ -142,8 +142,8 @@ async function shipOrder(order) {
 }
 ```
 
-You don’t pass context around.
-You don’t log manually.
+You don't pass context around.
+You don't log manually.
 You just describe what happened.
 
 Vision collects it — then emits exactly one event.
@@ -160,7 +160,7 @@ npm add @rodrigopsasaki/vision
 
 ## Quick start
 
-You don’t need to configure anything to start using Vision.
+You don't need to configure anything to start using Vision.
 
 ```ts
 import { vision } from "@rodrigopsasaki/vision";
@@ -171,7 +171,7 @@ await vision.observe("my.workflow", async () => {
 });
 ```
 
-That’s it.
+That's it.
 No setup. No boilerplate. No `init()` call required.
 Vision runs with a default console exporter out of the box.
 
@@ -199,13 +199,13 @@ Accessing context outside that block throws — by design.
 
 ---
 
-## You don’t need a correlation ID
+## You don't need a correlation ID
 
 Most systems bolt on `correlation_id` to make up for lost context.
-Vision doesn’t lose context in the first place.
+Vision doesn't lose context in the first place.
 
-You don’t thread a request ID.
-You don’t decorate every log call.
+You don't thread a request ID.
+You don't decorate every log call.
 You just enter an `observe()` block — and Vision handles the scope.
 
 Want to tag with a trace ID from upstream? Do it once:
@@ -218,7 +218,7 @@ await vision.observe("http.request", async () => {
 ```
 
 You get a unique ID for free.
-But you won’t need it to hold everything together anymore.
+But you won't need it to hold everything together anymore.
 
 ---
 
@@ -239,7 +239,7 @@ vision.registerExporter({
 });
 ```
 
-If you skip `error()`, Vision falls back to `success()` even on failure — so you’ll still get the data.
+If you skip `error()`, Vision falls back to `success()` even on failure — so you'll still get the data.
 
 ---
 
@@ -266,7 +266,7 @@ You can also remove exporters later:
 vision.unregisterExporter("stdout");
 ```
 
-For now, the default console exporter can’t be removed — but we’ll probably support that soon.
+For now, the default console exporter can't be removed — but we'll probably support that soon.
 
 ---
 
@@ -416,18 +416,142 @@ const exporter: VisionExporter = {
 
 ---
 
+## API Reference
+
+### Core Functions
+
+#### `vision.observe(options, callback)`
+
+Creates a new vision context and executes the provided callback within it.
+
+**Parameters:**
+- `options` - Either a string (context name) or a full options object
+- `callback` - The async function to execute within the vision context
+
+**Returns:** Promise that resolves to the callback result
+
+**Example:**
+```ts
+// Simple usage
+await vision.observe("user.login", async () => {
+  vision.set("user_id", "user123");
+  // ... work happens ...
+});
+
+// Advanced usage
+await vision.observe({
+  name: "order.processing",
+  scope: "http",
+  source: "api-gateway",
+  initial: { request_id: "req-123" }
+}, async () => {
+  vision.set("order_id", "order456");
+  // ... work happens ...
+});
+```
+
+#### `vision.init(options?)`
+
+Initializes the vision runtime with custom configuration.
+
+**Parameters:**
+- `options` - Optional runtime configuration
+
+**Example:**
+```ts
+vision.init({
+  exporters: [
+    {
+      name: "datadog",
+      success: (ctx) => sendToDatadog(ctx),
+      error: (ctx, err) => sendErrorToDatadog(ctx, err)
+    }
+  ]
+});
+```
+
+### Context Manipulation
+
+#### `vision.set(key, value)`
+
+Sets a key-value pair in the current vision context.
+
+**Parameters:**
+- `key` - The key to set
+- `value` - The value to store
+
+#### `vision.get(key)`
+
+Retrieves a value from the current vision context.
+
+**Parameters:**
+- `key` - The key to retrieve
+
+**Returns:** The stored value or undefined if not found
+
+#### `vision.push(key, value)`
+
+Pushes a value to an array in the current vision context.
+
+**Parameters:**
+- `key` - The key for the array
+- `value` - The value to push
+
+#### `vision.merge(key, value)`
+
+Merges an object into an existing object in the current vision context.
+
+**Parameters:**
+- `key` - The key for the object
+- `value` - The object to merge
+
+#### `vision.context()`
+
+Gets the current active vision context.
+
+**Returns:** The current vision context
+
+**Throws:** Error if called outside of a vision context
+
+### Exporter Management
+
+#### `vision.registerExporter(exporter)`
+
+Registers a new exporter to receive vision context data.
+
+**Parameters:**
+- `exporter` - The exporter to register
+
+#### `vision.unregisterExporter(name)`
+
+Unregisters an exporter by name.
+
+**Parameters:**
+- `name` - The name of the exporter to remove
+
+---
+
 ## Philosophy
 
 Vision replaces many logs with one idea:
 
-> “This happened. Here's everything we know.”
+> "This happened. Here's everything we know."
 
-It’s not a log formatter.
-It’s a structured, observable boundary.
+It's not a log formatter.
+It's a structured, observable boundary.
 
 You stop logging every heartbeat.
 You start capturing truth.
 
-## ⚖️ License
+---
+
+## Requirements
+
+- Node.js 18+ (for `crypto.randomUUID()` and `AsyncLocalStorage`)
+- TypeScript 5.0+ (for best experience)
+
+---
+
+## License
 
 MIT © [Rodrigo Sasaki](https://github.com/rodrigopsasaki)
