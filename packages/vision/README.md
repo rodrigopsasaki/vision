@@ -270,6 +270,152 @@ For now, the default console exporter can’t be removed — but we’ll probabl
 
 ---
 
+## Exporter Lifecycle Hooks
+
+Exporters can optionally provide lifecycle hooks to wrap execution with custom logic. These hooks are purpose-built for observability systems.
+
+### Lifecycle Hooks Basics
+
+Exporters can use lifecycle hooks to:
+- Set up their own context before execution (e.g., Datadog spans, OpenTelemetry traces)
+- Clean up or finalize after successful execution
+- Handle error-specific cleanup when execution fails
+- Still receive the final context data for export
+
+```ts
+const myExporter: VisionExporter = {
+  name: "my-exporter",
+  
+  before: (ctx: VisionContext) => {
+    // Set up your custom context here
+    const span = tracer.startSpan(ctx.name);
+    ctx.data.set("my.span", span);
+  },
+  
+  after: (ctx: VisionContext) => {
+    // Clean up after successful execution
+    const span = ctx.data.get("my.span") as any;
+    if (span) {
+      span.finish();
+      ctx.data.delete("my.span");
+    }
+  },
+  
+  onError: (ctx: VisionContext, err: unknown) => {
+    // Handle error-specific cleanup
+    const span = ctx.data.get("my.span") as any;
+    if (span) {
+      span.tags.error = err instanceof Error ? err.message : String(err);
+      span.finish();
+      ctx.data.delete("my.span");
+    }
+  },
+  
+  success: (ctx: VisionContext) => {
+    // Export the final context data
+    console.log("Success:", ctx);
+  },
+};
+```
+
+### Lifecycle Hook Execution Order
+
+1. **Before Phase**: All exporter `before()` hooks are called in registration order
+2. **Execution**: The main callback function runs
+3. **After Phase**: If successful, all exporter `after()` hooks are called in registration order
+4. **OnError Phase**: If failed, all exporter `onError()` hooks are called in registration order
+5. **Export**: All exporter `success()` or `error()` functions are called
+
+### Real-world Example: Datadog Integration
+
+```ts
+import { vision } from "@rodrigopsasaki/vision";
+
+const datadogExporter: VisionExporter = {
+  name: "datadog",
+  
+  before: (ctx: VisionContext) => {
+    // Create a Datadog span with vision context info
+    const span = tracer.startSpan(ctx.name, {
+      "vision.id": ctx.id,
+      "vision.scope": ctx.scope || "unknown",
+      "vision.source": ctx.source || "unknown",
+    });
+    
+    // Store span in context for later cleanup
+    ctx.data.set("datadog.span", span);
+  },
+  
+  after: (ctx: VisionContext) => {
+    // Finish span on successful completion
+    const span = ctx.data.get("datadog.span") as any;
+    if (span) {
+      span.finish();
+      ctx.data.delete("datadog.span");
+    }
+  },
+  
+  onError: (ctx: VisionContext, err: unknown) => {
+    // Finish span with error information
+    const span = ctx.data.get("datadog.span") as any;
+    if (span) {
+      span.tags.error = err instanceof Error ? err.message : String(err);
+      span.finish();
+      ctx.data.delete("datadog.span");
+    }
+  },
+  
+  success: (ctx: VisionContext) => {
+    // Send metrics to Datadog
+    sendMetrics(ctx.name, Object.fromEntries(ctx.data.entries()));
+  },
+  
+  error: (ctx: VisionContext, err: unknown) => {
+    // Send error metrics to Datadog
+    sendErrorMetrics(ctx.name, err);
+  },
+};
+
+// Register the exporter
+vision.init({
+  exporters: [datadogExporter],
+});
+
+// Now every observe() call creates a Datadog span automatically
+await vision.observe("order.processing", async () => {
+  vision.set("user_id", "user123");
+  // ... work happens ...
+});
+```
+
+### Error Handling
+
+Lifecycle hooks are executed appropriately based on the execution outcome. Error handling is declarative and clear:
+
+```ts
+const exporter: VisionExporter = {
+  name: "error-handling",
+  
+  before: (ctx: VisionContext) => {
+    console.log("Setting up...");
+  },
+  
+  after: (ctx: VisionContext) => {
+    console.log("Cleaning up after success...");
+  },
+  
+  onError: (ctx: VisionContext, err: unknown) => {
+    console.log("Cleaning up after error:", err);
+  },
+  
+  success: (ctx: VisionContext) => {
+    console.log("Success!");
+  },
+};
+```
+
+---
+
 ## Philosophy
 
 Vision replaces many logs with one idea:

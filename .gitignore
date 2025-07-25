@@ -28,3 +28,5 @@ dist/
 *.log
 .DS_Store
 .env
+
+.cursorrules

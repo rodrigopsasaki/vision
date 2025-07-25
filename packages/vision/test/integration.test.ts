@@ -1,6 +1,7 @@
 import { describe, test, expect, vi } from "vitest";
 
 import { vision } from "../src";
+import type { VisionContext } from "../src/core/types";
 
 describe("vision integration", () => {
   test("propagates context across async layers", async () => {
@@ -36,5 +37,168 @@ describe("vision integration", () => {
 
     expect(one).toHaveBeenCalled();
     expect(two).toHaveBeenCalled();
+  });
+
+  test("executes exporter lifecycle hooks", async () => {
+    const executionOrder: string[] = [];
+
+    const exporter1 = {
+      name: "first",
+      success: vi.fn(),
+      before: (ctx: VisionContext) => {
+        executionOrder.push("first-before");
+      },
+      after: (ctx: VisionContext) => {
+        executionOrder.push("first-after");
+      },
+      onError: (ctx: VisionContext, err: unknown) => {
+        executionOrder.push("first-onError");
+      },
+    };
+
+    const exporter2 = {
+      name: "second",
+      success: vi.fn(),
+      before: (ctx: VisionContext) => {
+        executionOrder.push("second-before");
+      },
+      after: (ctx: VisionContext) => {
+        executionOrder.push("second-after");
+      },
+      onError: (ctx: VisionContext, err: unknown) => {
+        executionOrder.push("second-onError");
+      },
+    };
+
+    vision.init({
+      exporters: [exporter1, exporter2],
+    });
+
+    await vision.observe("lifecycle-test", async () => {
+      vision.set("test", "value");
+      executionOrder.push("main-execution");
+    });
+
+    // Execution order should be: before (in order) -> execution -> after (in order)
+    expect(executionOrder).toEqual([
+      "first-before",
+      "second-before", 
+      "main-execution",
+      "first-after",
+      "second-after"
+    ]);
+    
+    // Exporters should still be called
+    expect(exporter1.success).toHaveBeenCalled();
+    expect(exporter2.success).toHaveBeenCalled();
+  });
+
+  test("executes onError hooks when exception occurs", async () => {
+    const executionOrder: string[] = [];
+
+    const exporter = {
+      name: "error-handler",
+      success: vi.fn(),
+      error: vi.fn(),
+      before: (ctx: VisionContext) => {
+        executionOrder.push("before");
+      },
+      after: (ctx: VisionContext) => {
+        executionOrder.push("after");
+      },
+      onError: (ctx: VisionContext, err: unknown) => {
+        executionOrder.push("onError");
+      },
+    };
+
+    vision.init({
+      exporters: [exporter],
+    });
+
+    const testError = new Error("Test error");
+
+    await expect(vision.observe("error-test", async () => {
+      vision.set("test", "value");
+      throw testError;
+    })).rejects.toThrow("Test error");
+
+    // Should execute before -> onError (not after)
+    expect(executionOrder).toEqual(["before", "onError"]);
+    expect(exporter.error).toHaveBeenCalled();
+  });
+
+  test("handles exporters without all hooks", async () => {
+    const beforeCalled = vi.fn();
+    const afterCalled = vi.fn();
+    const onErrorCalled = vi.fn();
+
+    const exporter = {
+      name: "partial-exporter",
+      success: vi.fn(),
+      before: (ctx: VisionContext) => {
+        beforeCalled();
+      },
+      // No after or onError hooks
+    };
+
+    vision.init({
+      exporters: [exporter],
+    });
+
+    await vision.observe("partial-test", async () => {
+      vision.set("test", "value");
+    });
+
+    expect(beforeCalled).toHaveBeenCalled();
+    expect(afterCalled).not.toHaveBeenCalled();
+    expect(onErrorCalled).not.toHaveBeenCalled();
+    expect(exporter.success).toHaveBeenCalled();
+  });
+
+  test("handles hook errors gracefully", async () => {
+    const beforeError = new Error("Before failed");
+    const afterError = new Error("After failed");
+
+    const exporter = {
+      name: "error-exporter",
+      success: vi.fn(),
+      before: (ctx: VisionContext) => {
+        throw beforeError;
+      },
+      after: (ctx: VisionContext) => {
+        throw afterError;
+      },
+    };
+
+    vision.init({
+      exporters: [exporter],
+    });
+
+    // Should not throw the hook errors
+    await expect(vision.observe("error-exporter-test", async () => {
+      vision.set("test", "value");
+    })).resolves.toBeUndefined();
+
+    expect(exporter.success).toHaveBeenCalled();
+  });
+
+  test("works without lifecycle hooks", async () => {
+    const exporter = {
+      name: "no-hooks",
+      success: vi.fn(),
+      // No lifecycle hooks
+    };
+
+    vision.init({
+      exporters: [exporter],
+    });
+
+    const result = await vision.observe("no-hooks-test", async () => {
+      vision.set("test", "value");
+      return "success";
+    });
+
+    expect(result).toBe("success");
+    expect(exporter.success).toHaveBeenCalled();
   });
 });

@@ -43,6 +43,7 @@ export interface VisionInitOptions {
 /**
  * Exporters are side-effect consumers of vision contexts.
  * All registered exporters will be called on both success and error flows.
+ * Exporters can optionally provide lifecycle hooks to wrap execution with custom logic.
  */
 export interface VisionExporter {
   /**
@@ -59,6 +60,31 @@ export interface VisionExporter {
    * Called when a context throws or rejects.
    */
   error?: (ctx: VisionContext, err: unknown) => void;
+
+  /**
+   * Called before the main execution to set up exporter-specific context.
+   * Use this to create spans, start timers, or initialize observability tools.
+   * 
+   * @param ctx - The vision context that will be active during execution
+   */
+  before?: (ctx: VisionContext) => void;
+
+  /**
+   * Called after successful execution to perform cleanup or finalization.
+   * Use this to finish spans, stop timers, or finalize observability data.
+   * 
+   * @param ctx - The vision context that was active during execution
+   */
+  after?: (ctx: VisionContext) => void;
+
+  /**
+   * Called after failed execution to perform error-specific cleanup.
+   * Use this to mark spans as failed, add error tags, or handle error observability.
+   * 
+   * @param ctx - The vision context that was active during execution
+   * @param err - The error that occurred during execution
+   */
+  onError?: (ctx: VisionContext, err: unknown) => void;
 }
 
 /**

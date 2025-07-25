@@ -9,6 +9,9 @@ export function createExporter(exporter: VisionExporter): Required<VisionExporte
     name: exporter.name,
     success: exporter.success,
     error: exporter.error ?? ((ctx) => exporter.success(ctx)),
+    before: exporter.before ?? (() => {}),
+    after: exporter.after ?? (() => {}),
+    onError: exporter.onError ?? (() => {}),
   };
 }
 
