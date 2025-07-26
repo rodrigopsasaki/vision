@@ -7,16 +7,6 @@ settings:
 importers:
 
   .:
-    dependencies:
-      '@rodrigopsasaki/vision':
-        specifier: workspace:*
-        version: link:packages/vision
-      node-fetch:
-        specifier: ^3.3.2
-        version: 3.3.2
-      zod:
-        specifier: ^3.22.4
-        version: 3.25.76
     devDependencies:
       '@types/node':
         specifier: ^20.0.0
@@ -27,9 +17,6 @@ importers:
       '@typescript-eslint/parser':
         specifier: ^8.36.0
         version: 8.36.0(eslint@9.31.0)(typescript@5.8.3)
-      '@vitest/coverage-v8':
-        specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4)
       cspell:
         specifier: ^9.1.5
         version: 9.1.5
@@ -111,12 +98,6 @@ importers:
 
   packages/vision-datadog-exporter:
     dependencies:
-      '@datadog/browser-logs':
-        specifier: ^6.0.0
-        version: 6.16.0(@datadog/browser-rum@5.35.1)
-      '@datadog/browser-rum':
-        specifier: ^5.0.0
-        version: 5.35.1(@datadog/browser-logs@6.16.0)
       '@rodrigopsasaki/vision':
         specifier: workspace:*
         version: link:../vision
@@ -148,24 +129,12 @@ importers:
       eslint-plugin-import:
         specifier: ^2.32.0
         version: 2.32.0(@typescript-eslint/parser@8.36.0)(eslint@9.31.0)
-      husky:
-        specifier: ^9.1.7
-        version: 9.1.7
-      lint-staged:
-        specifier: ^16.1.2
-        version: 16.1.2
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
       tsup:
         specifier: ^8.5.0
         version: 8.5.0(tsx@4.20.3)(typescript@5.8.3)
-      tsx:
-        specifier: ^4.20.3
-        version: 4.20.3
-      turbo:
-        specifier: ^2.5.4
-        version: 2.5.4
       typescript:
         specifier: ^5.8.3
         version: 5.8.3
@@ -575,45 +544,6 @@ packages:
     resolution: {integrity: sha512-2AxwDCf4fwXF558Qf4fHUAreVUvEaRhWagkX3uO6PES+54/uNmLDmjL3Xl6R+GpGGrIeRrBGtc/nqAeamK9g+g==}
     engines: {node: '>=20'}
     dev: true
-
-  /@datadog/browser-core@5.35.1:
-    resolution: {integrity: sha512-zjmw3WkF5syMq5+2jneSgSILxO3DTS+hKw270tzk/yQUfJIGInyGrkHUYYGLmZaVuVp+6F7iO3tUAwIqQYGBFw==}
-    dev: false
-
-  /@datadog/browser-core@6.16.0:
-    resolution: {integrity: sha512-l4GQLbpda9U1Wr/7CbSMEjFLPUofQcLtDRg2lsQ1Ull4tK2FcX7KF0yskCtlsn8QP3UQh8S7E+dh8RCTKdQmjw==}
-    dev: false
-
-  /@datadog/browser-logs@6.16.0(@datadog/browser-rum@5.35.1):
-    resolution: {integrity: sha512-URaKfPT5qFVJKjM0Sc3gQAUg/8bNnDQU8IDptrON5kCntdhKQlGKiYqd8wjImOLsOYs9v7T7qWuHeuqVQXkv9Q==}
-    peerDependencies:
-      '@datadog/browser-rum': 6.16.0
-    peerDependenciesMeta:
-      '@datadog/browser-rum':
-        optional: true
-    dependencies:
-      '@datadog/browser-core': 6.16.0
-      '@datadog/browser-rum': 5.35.1(@datadog/browser-logs@6.16.0)
-    dev: false
-
-  /@datadog/browser-rum-core@5.35.1:
-    resolution: {integrity: sha512-+WMHeL83BvFTE618SBx7VKT3gwJ/c1DuNehvv+ZbbMqRgrl2hBng5cLfhcEW/U6bLOyr08ZfaZ1m2r/xs2n4aA==}
-    dependencies:
-      '@datadog/browser-core': 5.35.1
-    dev: false
-
-  /@datadog/browser-rum@5.35.1(@datadog/browser-logs@6.16.0):
-    resolution: {integrity: sha512-/I3mQpnAuGZ1DU3wevgirKfT1DXuWY1eg4gOHjmONN91KThVoiuHg9HiAowfFFtQArsbcP5HqdA4lLJvH6w17A==}
-    peerDependencies:
-      '@datadog/browser-logs': 5.35.1
-    peerDependenciesMeta:
-      '@datadog/browser-logs':
-        optional: true
-    dependencies:
-      '@datadog/browser-core': 5.35.1
-      '@datadog/browser-logs': 6.16.0(@datadog/browser-rum@5.35.1)
-      '@datadog/browser-rum-core': 5.35.1
-    dev: false
 
   /@esbuild/aix-ppc64@0.25.6:
     resolution: {integrity: sha512-ShbM/3XxwuxjFiuVBHA+d3j5dyac0aEVVq1oluIDf71hUw0aRF59dV/efUsIwFnR6m8JNM2FjZOzmaZ8yG61kw==}

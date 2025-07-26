@@ -1,12 +1,12 @@
 /**
  * Generates a unique identifier using the Web Crypto API.
- * 
+ *
  * This function creates a cryptographically secure random UUID that can be used
  * as a unique identifier for vision contexts. It uses the native `crypto.randomUUID()`
  * method for optimal performance and security.
- * 
+ *
  * @returns A unique UUID string
- * 
+ *
  * @example
  * ```typescript
  * const id = generateId();

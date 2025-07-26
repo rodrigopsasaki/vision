@@ -82,12 +82,12 @@ describe("vision integration", () => {
     // Execution order should be: before (in order) -> execution -> after (in order)
     expect(executionOrder).toEqual([
       "first-before",
-      "second-before", 
+      "second-before",
       "main-execution",
       "first-after",
-      "second-after"
+      "second-after",
     ]);
-    
+
     // Exporters should still be called
     expect(exporter1.success).toHaveBeenCalled();
     expect(exporter2.success).toHaveBeenCalled();
@@ -117,10 +117,12 @@ describe("vision integration", () => {
 
     const testError = new Error("Test error");
 
-    await expect(vision.observe("error-test", async () => {
-      vision.set("test", "value");
-      throw testError;
-    })).rejects.toThrow("Test error");
+    await expect(
+      vision.observe("error-test", async () => {
+        vision.set("test", "value");
+        throw testError;
+      }),
+    ).rejects.toThrow("Test error");
 
     // Should execute before -> onError (not after)
     expect(executionOrder).toEqual(["before", "onError"]);
@@ -175,9 +177,11 @@ describe("vision integration", () => {
     });
 
     // Should not throw the hook errors
-    await expect(vision.observe("error-exporter-test", async () => {
-      vision.set("test", "value");
-    })).resolves.toBeUndefined();
+    await expect(
+      vision.observe("error-exporter-test", async () => {
+        vision.set("test", "value");
+      }),
+    ).resolves.toBeUndefined();
 
     expect(exporter.success).toHaveBeenCalled();
   });

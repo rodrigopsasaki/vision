@@ -8,15 +8,15 @@ import type { VisionContext, VisionInitOptions } from "./types";
 
 /**
  * Creates a new vision context and executes the provided callback within it.
- * 
+ *
  * This is the primary function for structured observability in Vision. It creates
  * a scoped context that captures all data set during execution and automatically
  * exports it to all registered exporters upon completion.
- * 
+ *
  * @param options - Either a string (context name) or a full options object
  * @param callback - The async function to execute within the vision context
  * @returns The result of the callback function
- * 
+ *
  * @example
  * ```typescript
  * // Simple usage with just a name
@@ -24,7 +24,7 @@ import type { VisionContext, VisionInitOptions } from "./types";
  *   vision.set("user_id", "user123");
  *   // ... work happens ...
  * });
- * 
+ *
  * // Advanced usage with full options
  * await observe({
  *   name: "order.processing",
@@ -70,7 +70,7 @@ export async function observe<T>(
 
     try {
       const result = await callback();
-      
+
       // Execute exporter after hooks (success)
       for (const exporter of exporters) {
         if (exporter.after) {
@@ -81,7 +81,7 @@ export async function observe<T>(
           }
         }
       }
-      
+
       fanOutToExporters(exporters, context);
       return result;
     } catch (err) {
@@ -91,11 +91,14 @@ export async function observe<T>(
           try {
             exporter.onError(context, err);
           } catch (onErrorError) {
-            console.error(`[vision] OnError hook error in exporter '${exporter.name}':`, onErrorError);
+            console.error(
+              `[vision] OnError hook error in exporter '${exporter.name}':`,
+              onErrorError,
+            );
           }
         }
       }
-      
+
       fanOutToExporters(exporters, context, err);
       throw err;
     }
@@ -104,22 +107,22 @@ export async function observe<T>(
 
 /**
  * The main Vision API object that provides structured observability capabilities.
- * 
+ *
  * Vision replaces traditional logging with structured context capture. Instead of
  * scattered log statements, you create scoped contexts that automatically collect
  * and export all relevant data.
- * 
+ *
  * @example
  * ```typescript
  * import { vision } from "@rodrigopsasaki/vision";
- * 
+ *
  * // Basic usage
  * await vision.observe("my.workflow", async () => {
  *   vision.set("user_id", "user123");
  *   vision.set("status", "processing");
  *   // ... work happens ...
  * });
- * 
+ *
  * // Advanced usage with custom exporters
  * vision.init({
  *   exporters: [myCustomExporter]
@@ -129,10 +132,10 @@ export async function observe<T>(
 export const vision = {
   /**
    * Starts a new context and captures structured data throughout its lifecycle.
-   * 
+   *
    * This is the primary method for creating structured observability contexts.
    * All data set during execution is automatically captured and exported.
-   * 
+   *
    * @param options - Context configuration (name string or full options object)
    * @param callback - Async function to execute within the context
    * @returns Promise that resolves to the callback result
@@ -141,12 +144,12 @@ export const vision = {
 
   /**
    * Initializes the vision runtime with custom configuration.
-   * 
+   *
    * Call this method to customize the default behavior, such as adding
    * custom exporters or overriding the default console exporter.
-   * 
+   *
    * @param options - Runtime configuration options
-   * 
+   *
    * @example
    * ```typescript
    * vision.init({
@@ -164,13 +167,13 @@ export const vision = {
 
   /**
    * Registers a new exporter to receive vision context data.
-   * 
+   *
    * Exporters are called automatically when contexts complete (success or error).
    * They can forward data to external systems like logging services, metrics
    * platforms, or observability tools.
-   * 
+   *
    * @param exporter - The exporter to register
-   * 
+   *
    * @example
    * ```typescript
    * vision.registerExporter({
@@ -184,9 +187,9 @@ export const vision = {
 
   /**
    * Unregisters an exporter by name.
-   * 
+   *
    * @param name - The name of the exporter to remove
-   * 
+   *
    * @example
    * ```typescript
    * vision.unregisterExporter("my-exporter");
@@ -197,10 +200,10 @@ export const vision = {
   // Context manipulation primitives
   /**
    * Sets a key-value pair in the current vision context.
-   * 
+   *
    * @param key - The key to set
    * @param value - The value to store
-   * 
+   *
    * @example
    * ```typescript
    * vision.set("user_id", "user123");
@@ -211,10 +214,10 @@ export const vision = {
 
   /**
    * Retrieves a value from the current vision context.
-   * 
+   *
    * @param key - The key to retrieve
    * @returns The stored value or undefined if not found
-   * 
+   *
    * @example
    * ```typescript
    * const userId = vision.get("user_id");
@@ -225,12 +228,12 @@ export const vision = {
 
   /**
    * Pushes a value to an array in the current vision context.
-   * 
+   *
    * If the key doesn't exist, an empty array is created first.
-   * 
+   *
    * @param key - The key for the array
    * @param value - The value to push
-   * 
+   *
    * @example
    * ```typescript
    * vision.push("events", "user_logged_in");
@@ -242,12 +245,12 @@ export const vision = {
 
   /**
    * Merges an object into an existing object in the current vision context.
-   * 
+   *
    * If the key doesn't exist, an empty object is created first.
-   * 
+   *
    * @param key - The key for the object
    * @param value - The object to merge
-   * 
+   *
    * @example
    * ```typescript
    * vision.merge("metadata", { version: "1.0.0" });
@@ -259,10 +262,10 @@ export const vision = {
 
   /**
    * Gets the current active vision context.
-   * 
+   *
    * @returns The current vision context
    * @throws Error if called outside of a vision context
-   * 
+   *
    * @example
    * ```typescript
    * const ctx = vision.context();

@@ -25,6 +25,12 @@
     },
     "lint:fix": {
       "outputs": []
+    },
+    "typecheck": {
+      "outputs": []
+    },
+    "spellcheck": {
+      "outputs": []
     }
   }
 }

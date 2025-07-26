@@ -1,34 +1,34 @@
-import type { VisionContext, VisionExporter } from '@rodrigopsasaki/vision';
-import { z } from 'zod';
-import { 
-  DatadogConfig, 
-  DatadogConfigSchema, 
+import type { VisionContext, VisionExporter } from "@rodrigopsasaki/vision";
+import { z } from "zod";
+
+import { BatchProcessor } from "./batch-processor.js";
+import { DatadogHttpClient } from "./http-client.js";
+import { VisionDatadogTransformer } from "./transformer.js";
+import {
+  DatadogConfig,
+  DatadogConfigSchema,
   VisionDatadogExporter as IVisionDatadogExporter,
-  DatadogValidationError,
   BatchConfig,
-  QueueItem
-} from './types.js';
-import { DatadogHttpClient } from './http-client.js';
-import { BatchProcessor } from './batch-processor.js';
-import { VisionDatadogTransformer } from './transformer.js';
+  QueueItem,
+} from "./types.js";
 
 /**
  * Datadog exporter for @rodrigopsasaki/vision
- * 
+ *
  * This exporter integrates with the vision observability system to send
  * structured context data to Datadog. By default, it exports contexts as
  * traces with all metadata included as span metadata.
  */
 export class VisionDatadogExporter implements VisionExporter, IVisionDatadogExporter {
-  public readonly name = 'datadog';
-  
+  public readonly name = "datadog";
+
   private readonly config: DatadogConfig;
   private readonly httpClient: DatadogHttpClient;
   private readonly transformer: VisionDatadogTransformer;
   private readonly batchProcessor: BatchProcessor;
   private isClosed = false;
 
-  constructor(config: DatadogConfig) {
+  constructor(config: z.input<typeof DatadogConfigSchema>) {
     this.config = DatadogConfigSchema.parse(config);
     this.httpClient = new DatadogHttpClient(this.config);
     this.transformer = new VisionDatadogTransformer(this.config);
@@ -40,12 +40,9 @@ export class VisionDatadogExporter implements VisionExporter, IVisionDatadogExpo
       retryDelay: 1000,
     };
 
-    this.batchProcessor = new BatchProcessor(
-      batchConfig,
-      async (items: QueueItem[]) => {
-        await this.processBatch(items);
-      }
-    );
+    this.batchProcessor = new BatchProcessor(batchConfig, async (items: QueueItem[]) => {
+      await this.processBatch(items);
+    });
   }
 
   /**
@@ -53,7 +50,7 @@ export class VisionDatadogExporter implements VisionExporter, IVisionDatadogExpo
    */
   before(context: VisionContext): void {
     if (this.isClosed) return;
-    
+
     // Record start time for duration calculation
     this.transformer.recordStart(context);
   }
@@ -71,7 +68,7 @@ export class VisionDatadogExporter implements VisionExporter, IVisionDatadogExpo
         data,
       });
     } catch (error) {
-      console.error('[vision-datadog-exporter] Error transforming context:', error);
+      console.error("[vision-datadog-exporter] Error transforming context:", error);
     }
   }
 
@@ -88,21 +85,21 @@ export class VisionDatadogExporter implements VisionExporter, IVisionDatadogExpo
         data,
       });
     } catch (error) {
-      console.error('[vision-datadog-exporter] Error transforming error context:', error);
+      console.error("[vision-datadog-exporter] Error transforming error context:", error);
     }
   }
 
   /**
    * Called after successful execution
    */
-  after(context: VisionContext): void {
+  after(_context: VisionContext): void {
     // No additional cleanup needed
   }
 
   /**
    * Called after failed execution
    */
-  onError(context: VisionContext, err: unknown): void {
+  onError(_context: VisionContext, _err: unknown): void {
     // Error handling is done in the error method
   }
 
@@ -111,13 +108,13 @@ export class VisionDatadogExporter implements VisionExporter, IVisionDatadogExpo
    */
   private transformContext(context: VisionContext, error?: unknown) {
     switch (this.config.exportMode) {
-      case 'metric':
+      case "metric":
         return this.transformer.toMetric(context, error);
-      case 'log':
+      case "log":
         return this.transformer.toLog(context, error);
-      case 'event':
+      case "event":
         return this.transformer.toEvent(context, error);
-      case 'trace':
+      case "trace":
       default:
         return this.transformer.toSpan(context, error);
     }
@@ -136,16 +133,16 @@ export class VisionDatadogExporter implements VisionExporter, IVisionDatadogExpo
       // Group items by type
       for (const item of items) {
         switch (item.type) {
-          case 'metric':
+          case "metric":
             metrics.push(item.data);
             break;
-          case 'log':
+          case "log":
             logs.push(item.data);
             break;
-          case 'trace':
+          case "trace":
             traces.push(item.data);
             break;
-          case 'event':
+          case "event":
             events.push(item.data);
             break;
         }
@@ -172,7 +169,7 @@ export class VisionDatadogExporter implements VisionExporter, IVisionDatadogExpo
 
       await Promise.all(promises);
     } catch (error) {
-      console.error('[vision-datadog-exporter] Error processing batch:', error);
+      console.error("[vision-datadog-exporter] Error processing batch:", error);
       throw error;
     }
   }
@@ -190,7 +187,7 @@ export class VisionDatadogExporter implements VisionExporter, IVisionDatadogExpo
    */
   async close(): Promise<void> {
     if (this.isClosed) return;
-    
+
     this.isClosed = true;
     await this.batchProcessor.close();
   }
@@ -213,15 +210,15 @@ export class VisionDatadogExporter implements VisionExporter, IVisionDatadogExpo
 
 /**
  * Create a Datadog exporter for vision with sensible defaults
- * 
+ *
  * @param config - Datadog configuration
  * @returns A vision-compatible Datadog exporter
- * 
+ *
  * @example
  * ```typescript
  * import { vision } from '@rodrigopsasaki/vision';
  * import { createDatadogExporter } from '@rodrigopsasaki/vision-datadog-exporter';
- * 
+ *
  * // Initialize vision with Datadog exporter
  * vision.init({
  *   exporters: [
@@ -232,7 +229,7 @@ export class VisionDatadogExporter implements VisionExporter, IVisionDatadogExpo
  *     })
  *   ]
  * });
- * 
+ *
  * // Use vision contexts - they'll automatically be sent to Datadog
  * await vision.observe('user.login', async () => {
  *   vision.set('user_id', 'user123');
@@ -241,23 +238,25 @@ export class VisionDatadogExporter implements VisionExporter, IVisionDatadogExpo
  * });
  * ```
  */
-export function createDatadogExporter(config: DatadogConfig): VisionDatadogExporter {
+export function createDatadogExporter(
+  config: z.input<typeof DatadogConfigSchema>,
+): VisionDatadogExporter {
   return new VisionDatadogExporter(config);
 }
 
 /**
  * Create a Datadog exporter with minimal configuration
- * 
+ *
  * @param apiKey - Datadog API key
  * @param service - Service name
  * @param options - Additional configuration options
  * @returns A vision-compatible Datadog exporter
- * 
+ *
  * @example
  * ```typescript
  * import { vision } from '@rodrigopsasaki/vision';
  * import { createSimpleDatadogExporter } from '@rodrigopsasaki/vision-datadog-exporter';
- * 
+ *
  * vision.init({
  *   exporters: [
  *     createSimpleDatadogExporter(
@@ -272,11 +271,13 @@ export function createDatadogExporter(config: DatadogConfig): VisionDatadogExpor
 export function createSimpleDatadogExporter(
   apiKey: string,
   service: string,
-  options: Partial<Omit<DatadogConfig, 'apiKey' | 'service'>> = {}
+  options: Partial<Omit<z.input<typeof DatadogConfigSchema>, "apiKey" | "service">> = {},
 ): VisionDatadogExporter {
-  return new VisionDatadogExporter({
+  const config = {
     apiKey,
     service,
     ...options,
-  });
-} 
+  };
+
+  return new VisionDatadogExporter(config);
+}

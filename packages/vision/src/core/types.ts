@@ -64,7 +64,7 @@ export interface VisionExporter {
   /**
    * Called before the main execution to set up exporter-specific context.
    * Use this to create spans, start timers, or initialize observability tools.
-   * 
+   *
    * @param ctx - The vision context that will be active during execution
    */
   before?: (ctx: VisionContext) => void;
@@ -72,7 +72,7 @@ export interface VisionExporter {
   /**
    * Called after successful execution to perform cleanup or finalization.
    * Use this to finish spans, stop timers, or finalize observability data.
-   * 
+   *
    * @param ctx - The vision context that was active during execution
    */
   after?: (ctx: VisionContext) => void;
@@ -80,7 +80,7 @@ export interface VisionExporter {
   /**
    * Called after failed execution to perform error-specific cleanup.
    * Use this to mark spans as failed, add error tags, or handle error observability.
-   * 
+   *
    * @param ctx - The vision context that was active during execution
    * @param err - The error that occurred during execution
    */

@@ -277,6 +277,7 @@ Exporters can optionally provide lifecycle hooks to wrap execution with custom l
 ### Lifecycle Hooks Basics
 
 Exporters can use lifecycle hooks to:
+
 - Set up their own context before execution (e.g., Datadog spans, OpenTelemetry traces)
 - Clean up or finalize after successful execution
 - Handle error-specific cleanup when execution fails
@@ -285,13 +286,13 @@ Exporters can use lifecycle hooks to:
 ```ts
 const myExporter: VisionExporter = {
   name: "my-exporter",
-  
+
   before: (ctx: VisionContext) => {
     // Set up your custom context here
     const span = tracer.startSpan(ctx.name);
     ctx.data.set("my.span", span);
   },
-  
+
   after: (ctx: VisionContext) => {
     // Clean up after successful execution
     const span = ctx.data.get("my.span") as any;
@@ -300,7 +301,7 @@ const myExporter: VisionExporter = {
       ctx.data.delete("my.span");
     }
   },
-  
+
   onError: (ctx: VisionContext, err: unknown) => {
     // Handle error-specific cleanup
     const span = ctx.data.get("my.span") as any;
@@ -310,7 +311,7 @@ const myExporter: VisionExporter = {
       ctx.data.delete("my.span");
     }
   },
-  
+
   success: (ctx: VisionContext) => {
     // Export the final context data
     console.log("Success:", ctx);
@@ -333,7 +334,7 @@ import { vision } from "@rodrigopsasaki/vision";
 
 const datadogExporter: VisionExporter = {
   name: "datadog",
-  
+
   before: (ctx: VisionContext) => {
     // Create a Datadog span with vision context info
     const span = tracer.startSpan(ctx.name, {
@@ -341,11 +342,11 @@ const datadogExporter: VisionExporter = {
       "vision.scope": ctx.scope || "unknown",
       "vision.source": ctx.source || "unknown",
     });
-    
+
     // Store span in context for later cleanup
     ctx.data.set("datadog.span", span);
   },
-  
+
   after: (ctx: VisionContext) => {
     // Finish span on successful completion
     const span = ctx.data.get("datadog.span") as any;
@@ -354,7 +355,7 @@ const datadogExporter: VisionExporter = {
       ctx.data.delete("datadog.span");
     }
   },
-  
+
   onError: (ctx: VisionContext, err: unknown) => {
     // Finish span with error information
     const span = ctx.data.get("datadog.span") as any;
@@ -364,12 +365,12 @@ const datadogExporter: VisionExporter = {
       ctx.data.delete("datadog.span");
     }
   },
-  
+
   success: (ctx: VisionContext) => {
     // Send metrics to Datadog
     sendMetrics(ctx.name, Object.fromEntries(ctx.data.entries()));
   },
-  
+
   error: (ctx: VisionContext, err: unknown) => {
     // Send error metrics to Datadog
     sendErrorMetrics(ctx.name, err);
@@ -395,19 +396,19 @@ Lifecycle hooks are executed appropriately based on the execution outcome. Error
 ```ts
 const exporter: VisionExporter = {
   name: "error-handling",
-  
+
   before: (ctx: VisionContext) => {
     console.log("Setting up...");
   },
-  
+
   after: (ctx: VisionContext) => {
     console.log("Cleaning up after success...");
   },
-  
+
   onError: (ctx: VisionContext, err: unknown) => {
     console.log("Cleaning up after error:", err);
   },
-  
+
   success: (ctx: VisionContext) => {
     console.log("Success!");
   },
@@ -425,12 +426,14 @@ const exporter: VisionExporter = {
 Creates a new vision context and executes the provided callback within it.
 
 **Parameters:**
+
 - `options` - Either a string (context name) or a full options object
 - `callback` - The async function to execute within the vision context
 
 **Returns:** Promise that resolves to the callback result
 
 **Example:**
+
 ```ts
 // Simple usage
 await vision.observe("user.login", async () => {
@@ -439,15 +442,18 @@ await vision.observe("user.login", async () => {
 });
 
 // Advanced usage
-await vision.observe({
-  name: "order.processing",
-  scope: "http",
-  source: "api-gateway",
-  initial: { request_id: "req-123" }
-}, async () => {
-  vision.set("order_id", "order456");
-  // ... work happens ...
-});
+await vision.observe(
+  {
+    name: "order.processing",
+    scope: "http",
+    source: "api-gateway",
+    initial: { request_id: "req-123" },
+  },
+  async () => {
+    vision.set("order_id", "order456");
+    // ... work happens ...
+  },
+);
 ```
 
 #### `vision.init(options?)`
@@ -455,18 +461,20 @@ await vision.observe({
 Initializes the vision runtime with custom configuration.
 
 **Parameters:**
+
 - `options` - Optional runtime configuration
 
 **Example:**
+
 ```ts
 vision.init({
   exporters: [
     {
       name: "datadog",
       success: (ctx) => sendToDatadog(ctx),
-      error: (ctx, err) => sendErrorToDatadog(ctx, err)
-    }
-  ]
+      error: (ctx, err) => sendErrorToDatadog(ctx, err),
+    },
+  ],
 });
 ```
 
@@ -477,6 +485,7 @@ vision.init({
 Sets a key-value pair in the current vision context.
 
 **Parameters:**
+
 - `key` - The key to set
 - `value` - The value to store
 
@@ -485,6 +494,7 @@ Sets a key-value pair in the current vision context.
 Retrieves a value from the current vision context.
 
 **Parameters:**
+
 - `key` - The key to retrieve
 
 **Returns:** The stored value or undefined if not found
@@ -494,6 +504,7 @@ Retrieves a value from the current vision context.
 Pushes a value to an array in the current vision context.
 
 **Parameters:**
+
 - `key` - The key for the array
 - `value` - The value to push
 
@@ -502,6 +513,7 @@ Pushes a value to an array in the current vision context.
 Merges an object into an existing object in the current vision context.
 
 **Parameters:**
+
 - `key` - The key for the object
 - `value` - The object to merge
 
@@ -520,6 +532,7 @@ Gets the current active vision context.
 Registers a new exporter to receive vision context data.
 
 **Parameters:**
+
 - `exporter` - The exporter to register
 
 #### `vision.unregisterExporter(name)`
@@ -527,6 +540,7 @@ Registers a new exporter to receive vision context data.
 Unregisters an exporter by name.
 
 **Parameters:**
+
 - `name` - The name of the exporter to remove
 
 ---

@@ -1,0 +1,25 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "datadog",
+    "rodrigopsasaki",
+    "sasaki",
+    "datadoghq",
+    "ddsource",
+    "ddtags",
+    "retryable",
+    "opentelemetry",
+    "otel",
+    "telemetry",
+    "observability",
+    "exporter",
+    "exporters",
+    "spans",
+    "tracing",
+    "middleware",
+    "subclassing"
+  ],
+  "ignorePaths": ["dist", "node_modules"],
+  "ignoreRegExpList": ["/.*\\.test\\.ts$/"]
+}
