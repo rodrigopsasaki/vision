@@ -1,5 +1,5 @@
-import type { Request, Response, NextFunction } from "express";
 import type { VisionContext } from "@rodrigopsasaki/vision";
+import type { Request, Response, NextFunction } from "express";
 
 /**
  * Configuration options for the Vision Express middleware.
@@ -151,7 +151,7 @@ export interface VisionRequest extends Request {
 /**
  * Extended Express Response interface with Vision context.
  */
-export interface VisionResponse extends Response {
+export interface VisionResponse extends Omit<Response, 'end' | 'set'> {
   /**
    * The active Vision context for this response.
    */
@@ -160,12 +160,12 @@ export interface VisionResponse extends Response {
   /**
    * Override end method to capture response metadata.
    */
-  end(chunk?: any, encoding?: any, cb?: any): Response;
+  end(chunk?: any, encoding?: any, cb?: any): VisionResponse;
   
   /**
    * Set response header.
    */
-  set(field: string, value?: string | string[]): Response;
+  set(field: string, value?: string | string[]): VisionResponse;
 }
 
 /**

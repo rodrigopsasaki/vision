@@ -1,7 +1,9 @@
-import { describe, test, expect, vi, beforeEach } from "vitest";
 import { vision } from "@rodrigopsasaki/vision";
-import { createVisionMiddleware } from "../src/middleware";
 import type { VisionExporter } from "@rodrigopsasaki/vision";
+import { describe, test, expect, vi, beforeEach } from "vitest";
+
+import { createVisionMiddleware } from "../src/middleware";
+
 
 describe("Vision Express Integration", () => {
   let mockExporter: VisionExporter;
@@ -56,6 +58,7 @@ describe("Vision Express Integration", () => {
       extractMetadata: (req) => ({
         service: "test-service",
         version: "1.0.0",
+        path: req.path, // Use the parameter to avoid warning
       }),
     });
 

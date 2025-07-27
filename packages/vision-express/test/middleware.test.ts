@@ -1,7 +1,9 @@
-import { describe, test, expect, vi, beforeEach } from "vitest";
 import { vision } from "@rodrigopsasaki/vision";
-import { createVisionMiddleware } from "../src/middleware";
 import type { VisionExporter } from "@rodrigopsasaki/vision";
+import { describe, test, expect, vi, beforeEach } from "vitest";
+
+import { createVisionMiddleware } from "../src/middleware";
+
 
 describe("createVisionMiddleware", () => {
   let mockExporter: VisionExporter;
@@ -31,14 +33,14 @@ describe("createVisionMiddleware", () => {
     expect(typeof middleware).toBe("function");
   });
 
-  test("creates simple middleware", () => {
-    const { createSimpleVisionMiddleware } = require("../src/middleware");
+  test("creates simple middleware", async () => {
+    const { createSimpleVisionMiddleware } = await import("../src/middleware");
     const middleware = createSimpleVisionMiddleware();
     expect(typeof middleware).toBe("function");
   });
 
-  test("creates comprehensive middleware", () => {
-    const { createComprehensiveVisionMiddleware } = require("../src/middleware");
+  test("creates comprehensive middleware", async () => {
+    const { createComprehensiveVisionMiddleware } = await import("../src/middleware");
     const middleware = createComprehensiveVisionMiddleware();
     expect(typeof middleware).toBe("function");
   });

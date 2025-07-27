@@ -1,5 +1,6 @@
-import type { NextFunction } from "express";
 import { vision } from "@rodrigopsasaki/vision";
+import type { NextFunction } from "express";
+
 import type { VisionExpressOptions, VisionRequest, VisionResponse } from "./types";
 import { extractRequestMetadata, extractResponseMetadata, extractErrorMetadata, mergeOptions } from "./utils";
 
@@ -105,24 +106,7 @@ export function createVisionMiddleware(options: Partial<VisionExpressOptions> = 
             return originalEnd.call(this, chunk, encoding, cb);
           };
 
-          // Handle errors
-          const originalError = next;
-          const errorHandler = (error: unknown) => {
-            if (config.captureErrors) {
-              const errorMetadata = extractErrorMetadata(error);
-              vision.set("error", errorMetadata);
-            }
-            return originalError(error);
-          };
-
-          // Override next to capture errors
-          const wrappedNext = (error?: unknown) => {
-            if (error) {
-              errorHandler(error);
-            } else {
-              next();
-            }
-          };
+          // Handle errors - originalError is used in the Promise below
 
           // Execute the rest of the middleware chain
           return new Promise<void>((resolve, reject) => {
@@ -139,8 +123,8 @@ export function createVisionMiddleware(options: Partial<VisionExpressOptions> = 
               }
             };
 
-            // Call the original next function
-            originalNext();
+            // Call the original next function with our wrapped version
+            originalNext(wrappedNext);
           });
         }
       );
