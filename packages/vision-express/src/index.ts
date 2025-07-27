@@ -1,8 +1,10 @@
 // Main middleware exports
 export {
   createVisionMiddleware,
-  createSimpleVisionMiddleware,
+  visionMiddleware,
+  createMinimalVisionMiddleware,
   createComprehensiveVisionMiddleware,
+  createSecureVisionMiddleware,
 } from "./middleware";
 
 // Type exports

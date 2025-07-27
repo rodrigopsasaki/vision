@@ -2,7 +2,7 @@ import { vision } from "@rodrigopsasaki/vision";
 import type { NextFunction } from "express";
 
 import type { VisionExpressOptions, VisionRequest, VisionResponse } from "./types";
-import { extractRequestMetadata, extractResponseMetadata, extractErrorMetadata, mergeOptions } from "./utils";
+import { DEFAULT_VISION_EXPRESS_OPTIONS } from "./types";
 
 // Re-export types for convenience
 export type { VisionRequest, VisionResponse, VisionExpressOptions };
@@ -24,15 +24,14 @@ export type { VisionRequest, VisionResponse, VisionExpressOptions };
  * 
  * const app = express();
  * 
- * // Basic usage
+ * // Basic usage - just works out of the box
  * app.use(createVisionMiddleware());
  * 
  * // Advanced usage with custom options
  * app.use(createVisionMiddleware({
  *   captureBody: true,
- *   contextNameGenerator: (req) => `api.${req.method}.${req.path}`,
+ *   excludeRoutes: ["/health", "/metrics"],
  *   extractUser: (req) => req.user,
- *   shouldExcludeRoute: (req) => req.path.startsWith('/health'),
  * }));
  * 
  * app.get('/users/:id', async (req, res) => {
@@ -49,122 +48,119 @@ export type { VisionRequest, VisionResponse, VisionExpressOptions };
  * });
  * ```
  */
-export function createVisionMiddleware(options: Partial<VisionExpressOptions> = {}) {
-  const config = mergeOptions(options);
+export function createVisionMiddleware(options: VisionExpressOptions = {}) {
+  const config = { ...DEFAULT_VISION_EXPRESS_OPTIONS, ...options };
 
-  return async (req: VisionRequest, res: VisionResponse, next: NextFunction) => {
-    // Skip Vision tracking for excluded routes
-    if (config.shouldExcludeRoute(req)) {
+  return (req: VisionRequest, res: VisionResponse, next: NextFunction) => {
+    // Skip if disabled or excluded route
+    if (!config.enabled || shouldExcludeRoute(req, config.excludeRoutes)) {
       return next();
     }
 
     const startTime = Date.now();
-    const contextName = config.contextNameGenerator(req);
+    const contextName = `api.${req.method.toLowerCase()}.${req.path}`;
 
-    try {
-      // Extract initial metadata
-      const requestMetadata = config.captureRequestMetadata 
-        ? extractRequestMetadata(req, config) 
-        : undefined;
+    // Extract correlation ID using smart defaults
+    const correlationId = extractCorrelationId(req, config.correlationIdHeaders);
 
-      const customMetadata = config.extractMetadata(req);
+    // Extract user using smart defaults
+    const user = config.extractUser(req);
 
-      // Create initial data for the context
-      const initialData: Record<string, unknown> = {
-        ...customMetadata,
-      };
+    // Extract request metadata
+    const requestMetadata = extractRequestMetadata(req, config);
 
-      if (requestMetadata) {
-        initialData.request = requestMetadata;
-      }
+    // Create initial data for the context
+    const initialData: Record<string, unknown> = {
+      service: "vision-express",
+      timestamp: new Date().toISOString(),
+      request: requestMetadata,
+    };
 
-      // Create and execute the Vision context
-      await vision.observe(
-        {
-          name: contextName,
-          scope: "http",
-          source: "express",
-          initial: initialData,
-        },
-        async () => {
-          // Store the context on the request and response objects
-          req.visionContext = vision.context();
-          res.visionContext = vision.context();
-
-          // Add request ID to response headers if configured
-          if (config.includeRequestIdInResponse) {
-            res.set(config.requestIdHeader, req.visionContext.id);
-          }
-
-          // Capture response metadata on finish
-          const originalEnd = res.end;
-          res.end = function(chunk?: any, encoding?: any, cb?: any) {
-            if (config.captureResponseMetadata) {
-              const responseMetadata = extractResponseMetadata(res, startTime);
-              vision.set("response", responseMetadata);
-            }
-            return originalEnd.call(this, chunk, encoding, cb);
-          };
-
-          // Handle errors - originalError is used in the Promise below
-
-          // Execute the rest of the middleware chain
-          return new Promise<void>((resolve, reject) => {
-            const originalNext = next;
-            const wrappedNext = (error?: unknown) => {
-              if (error) {
-                if (config.captureErrors) {
-                  const errorMetadata = extractErrorMetadata(error);
-                  vision.set("error", errorMetadata);
-                }
-                reject(error);
-              } else {
-                resolve();
-              }
-            };
-
-            // Call the original next function with our wrapped version
-            originalNext(wrappedNext);
-          });
-        }
-      );
-    } catch (error) {
-      // If there's an error in the Vision context creation, still call next
-      // but log the error
-      console.error("[vision-express] Error creating Vision context:", error);
-      next();
+    // Add correlation ID if found
+    if (correlationId) {
+      initialData.correlationId = correlationId;
     }
+
+    // Add user if found
+    if (user) {
+      initialData.user = user;
+    }
+
+    // Create and execute the Vision context
+    vision.observe(
+      {
+        name: contextName,
+        scope: "http",
+        source: "express",
+        initial: initialData,
+      },
+      async () => {
+        // Store the context on the request and response objects
+        req.visionContext = vision.context();
+        res.visionContext = vision.context();
+
+        // Add request ID to response headers if configured
+        if (config.includeRequestId) {
+          res.set(config.requestIdHeader, req.visionContext.id);
+        }
+
+        // Capture response metadata on finish
+        const originalEnd = res.end;
+        res.end = function(chunk?: any, encoding?: any, cb?: any) {
+          const responseMetadata = extractResponseMetadata(res, startTime);
+          vision.set("response", responseMetadata);
+          return originalEnd.call(this, chunk, encoding, cb);
+        };
+
+        // Execute the rest of the middleware chain
+        next();
+      }
+    );
   };
 }
 
 /**
- * Creates a simple Vision middleware with minimal configuration.
+ * Simple one-liner middleware - just works out of the box.
  * 
- * This is a convenience function for basic usage scenarios.
+ * This is the recommended default middleware for most applications.
+ * 
+ * @param options - Optional configuration overrides
+ * @returns Express middleware function
+ * 
+ * @example
+ * ```typescript
+ * import express from 'express';
+ * import { visionMiddleware } from '@rodrigopsasaki/vision-express';
+ * 
+ * const app = express();
+ * app.use(visionMiddleware());
+ * ```
+ */
+export function visionMiddleware(options: VisionExpressOptions = {}) {
+  return createVisionMiddleware(options);
+}
+
+/**
+ * Creates a minimal Vision middleware with no Express metadata capture.
+ * 
+ * Perfect for when you want Vision context but no Express metadata clutter.
  * 
  * @returns Express middleware function
  * 
  * @example
  * ```typescript
  * import express from 'express';
- * import { createSimpleVisionMiddleware } from '@rodrigopsasaki/vision-express';
+ * import { createMinimalVisionMiddleware } from '@rodrigopsasaki/vision-express';
  * 
  * const app = express();
- * app.use(createSimpleVisionMiddleware());
+ * app.use(createMinimalVisionMiddleware());
  * ```
  */
-export function createSimpleVisionMiddleware() {
+export function createMinimalVisionMiddleware() {
   return createVisionMiddleware({
-    captureRequestMetadata: true,
-    captureResponseMetadata: true,
-    captureHeaders: true,
+    captureHeaders: false,
+    captureQueryParams: false,
     captureBody: false,
-    captureQuery: true,
-    captureParams: true,
-    captureUserAgent: true,
-    captureIp: true,
-    captureTiming: true,
-    redactSensitiveData: true,
   });
 }
 
@@ -187,15 +183,97 @@ export function createSimpleVisionMiddleware() {
  */
 export function createComprehensiveVisionMiddleware() {
   return createVisionMiddleware({
-    captureRequestMetadata: true,
-    captureResponseMetadata: true,
     captureHeaders: true,
+    captureQueryParams: true,
     captureBody: true,
-    captureQuery: true,
-    captureParams: true,
-    captureUserAgent: true,
-    captureIp: true,
-    captureTiming: true,
-    redactSensitiveData: true,
   });
+}
+
+/**
+ * Creates a secure Vision middleware with extra security redaction.
+ * 
+ * Perfect for high-security applications with extra protection.
+ * 
+ * @returns Express middleware function
+ * 
+ * @example
+ * ```typescript
+ * import express from 'express';
+ * import { createSecureVisionMiddleware } from '@rodrigopsasaki/vision-express';
+ * 
+ * const app = express();
+ * app.use(createSecureVisionMiddleware());
+ * ```
+ */
+export function createSecureVisionMiddleware() {
+  return createVisionMiddleware({
+    captureHeaders: false,
+    captureQueryParams: false,
+    captureBody: false,
+    redactHeaders: [...DEFAULT_VISION_EXPRESS_OPTIONS.redactHeaders, "x-forwarded-for", "x-real-ip"],
+    redactQueryParams: [...DEFAULT_VISION_EXPRESS_OPTIONS.redactQueryParams, "session", "sid"],
+    redactBodyFields: [...DEFAULT_VISION_EXPRESS_OPTIONS.redactBodyFields, "session", "sid"],
+  });
+}
+
+// Helper functions
+function shouldExcludeRoute(req: VisionRequest, excludeRoutes: string[]): boolean {
+  const path = req.path.toLowerCase();
+  return excludeRoutes.some(route => path.includes(route.toLowerCase()));
+}
+
+function extractCorrelationId(req: VisionRequest, headers: string[]): string | undefined {
+  for (const header of headers) {
+    const value = req.headers[header] as string;
+    if (value) return value;
+  }
+  return undefined;
+}
+
+function extractRequestMetadata(req: VisionRequest, config: Required<VisionExpressOptions>) {
+  const metadata: Record<string, unknown> = {
+    method: req.method,
+    path: req.path,
+  };
+
+  // Capture headers if enabled
+  if (config.captureHeaders) {
+    const headers: Record<string, string> = {};
+    Object.entries(req.headers).forEach(([key, value]) => {
+      if (config.redactHeaders.includes(key.toLowerCase())) {
+        headers[key] = "[REDACTED]";
+      } else {
+        headers[key] = Array.isArray(value) ? value.join(", ") : String(value || "");
+      }
+    });
+    metadata.headers = headers;
+  }
+
+  // Capture query params if enabled
+  if (config.captureQueryParams) {
+    const query: Record<string, string> = {};
+    Object.entries(req.query).forEach(([key, value]) => {
+      if (config.redactQueryParams.includes(key.toLowerCase())) {
+        query[key] = "[REDACTED]";
+      } else {
+        query[key] = Array.isArray(value) ? value.join(", ") : String(value || "");
+      }
+    });
+    metadata.query = query;
+  }
+
+  // Capture body if enabled
+  if (config.captureBody && req.body) {
+    metadata.body = req.body;
+  }
+
+  return metadata;
+}
+
+function extractResponseMetadata(res: VisionResponse, startTime: number) {
+  return {
+    statusCode: res.statusCode,
+    headers: res.getHeaders(),
+    duration: Date.now() - startTime,
+  };
 } 

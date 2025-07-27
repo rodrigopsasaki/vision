@@ -1,6 +1,6 @@
 import express from "express";
 import { vision } from "@rodrigopsasaki/vision";
-import { createVisionMiddleware } from "../src/middleware";
+import { visionMiddleware } from "../src/middleware";
 
 // Initialize Vision with a simple console exporter
 vision.init({
@@ -29,8 +29,8 @@ vision.init({
 
 const app = express();
 
-// Add the Vision middleware
-app.use(createVisionMiddleware());
+// Add the Vision middleware - just works out of the box!
+app.use(visionMiddleware());
 
 // Example routes
 app.get("/users/:id", async (req, res) => {

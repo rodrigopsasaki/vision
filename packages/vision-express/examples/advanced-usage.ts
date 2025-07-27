@@ -1,6 +1,6 @@
 import express from "express";
 import { vision } from "@rodrigopsasaki/vision";
-import { createVisionMiddleware, type VisionRequest } from "../src/middleware";
+import { visionMiddleware, type VisionRequest } from "../src/middleware";
 
 // Initialize Vision with comprehensive exporters
 vision.init({
@@ -25,58 +25,31 @@ const app = express();
 // Add JSON body parsing
 app.use(express.json());
 
-// Add the Vision middleware with advanced configuration
-app.use(createVisionMiddleware({
-  // Custom context naming
-  contextNameGenerator: (req) => `api.${req.method.toLowerCase()}.${req.route?.path || req.path}`,
+// Add the Vision middleware with custom configuration
+app.use(visionMiddleware({
+  // Enable body capture for this example
+  captureBody: true,
   
-  // Extract user from authentication (assuming you have auth middleware)
-  extractUser: (req) => (req as any).user,
+  // Exclude additional routes
+  excludeRoutes: ["/health", "/metrics", "/status", "/static", "/favicon.ico"],
   
-  // Extract correlation ID from headers
-  extractCorrelationId: (req) => 
-    req.headers["x-correlation-id"] as string || 
-    req.headers["x-request-id"] as string,
+  // Custom user extraction
+  extractUser: (req) => (req as any).user || req.headers["x-user-id"],
   
-  // Extract tenant from subdomain
-  extractTenant: (req) => (req as any).subdomains?.[0],
+  // Custom correlation ID headers
+  correlationIdHeaders: ["x-correlation-id", "x-request-id", "x-trace-id"],
   
-  // Custom metadata extraction
-  extractMetadata: (req) => ({
-    service: "user-service",
-    version: "1.0.0",
-    environment: process.env.NODE_ENV || "development",
-    region: process.env.AWS_REGION || "us-east-1",
-  }),
-  
-  // Exclude specific routes
-  shouldExcludeRoute: (req) => {
-    const path = req.path.toLowerCase();
-    return (
-      path.includes("/health") ||
-      path.includes("/metrics") ||
-      path.includes("/status") ||
-      path.startsWith("/static/") ||
-      path === "/favicon.ico"
-    );
-  },
-  
-  // Security settings
-  captureBody: false, // Don't capture request bodies by default
-  redactSensitiveData: true,
-  redactedHeaders: [
+  // Additional security redaction
+  redactHeaders: [
     "authorization",
     "cookie",
     "x-api-key",
     "x-auth-token",
     "x-session-token",
+    "x-csrf-token"
   ],
-  redactedQueryParams: ["token", "key", "secret", "password"],
-  redactedBodyFields: ["password", "ssn", "credit_card", "secret"],
-  
-  // Response settings
-  includeRequestIdInResponse: true,
-  requestIdHeader: "X-Request-ID",
+  redactQueryParams: ["token", "key", "secret", "password", "auth"],
+  redactBodyFields: ["password", "ssn", "credit_card", "secret", "api_key"],
 }));
 
 // Example routes with proper TypeScript types
@@ -248,7 +221,7 @@ const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log(`🚀 Advanced Vision Express server running on http://localhost:${PORT}`);
-  console.log("📊 Vision middleware is active with comprehensive configuration");
+  console.log("📊 Vision middleware is active with custom configuration");
   console.log("");
   console.log("Available endpoints:");
   console.log(`  GET    http://localhost:${PORT}/users/:id`);
@@ -262,4 +235,5 @@ app.listen(PORT, () => {
   console.log("Try adding headers like:");
   console.log("  X-Correlation-ID: your-correlation-id");
   console.log("  X-Request-ID: your-request-id");
+  console.log("  X-User-ID: your-user-id");
 }); 

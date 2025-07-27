@@ -1,7 +1,7 @@
 {
   "name": "@rodrigopsasaki/vision-express",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Express middleware for seamless Vision context integration",
   "license": "MIT",
   "author": "Rodrigo Sasaki",

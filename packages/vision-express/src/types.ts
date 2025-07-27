@@ -6,16 +6,28 @@ import type { Request, Response, NextFunction } from "express";
  */
 export interface VisionExpressOptions {
   /**
-   * Whether to automatically capture request metadata.
+   * Whether the middleware is enabled.
    * Defaults to true.
    */
-  captureRequestMetadata?: boolean;
+  enabled?: boolean;
 
   /**
-   * Whether to automatically capture response metadata.
-   * Defaults to true.
+   * Routes to exclude from Vision tracking.
+   * Defaults to health checks and metrics endpoints.
    */
-  captureResponseMetadata?: boolean;
+  excludeRoutes?: string[];
+
+  /**
+   * Custom function to extract user information from the request.
+   * Uses smart defaults to detect common authentication patterns.
+   */
+  extractUser?: (req: Request) => unknown;
+
+  /**
+   * Headers to check for correlation IDs.
+   * Defaults to common correlation ID headers.
+   */
+  correlationIdHeaders?: string[];
 
   /**
    * Whether to capture request headers.
@@ -24,118 +36,46 @@ export interface VisionExpressOptions {
   captureHeaders?: boolean;
 
   /**
-   * Whether to capture request body (for non-GET requests).
+   * Whether to capture query parameters.
+   * Defaults to true.
+   */
+  captureQueryParams?: boolean;
+
+  /**
+   * Whether to capture request body.
    * Defaults to false for security reasons.
    */
   captureBody?: boolean;
 
   /**
-   * Whether to capture query parameters.
-   * Defaults to true.
+   * Headers to redact (sensitive data).
+   * Defaults to common sensitive headers.
    */
-  captureQuery?: boolean;
+  redactHeaders?: string[];
 
   /**
-   * Whether to capture URL parameters.
-   * Defaults to true.
+   * Query parameters to redact (sensitive data).
+   * Defaults to common sensitive query params.
    */
-  captureParams?: boolean;
+  redactQueryParams?: string[];
 
   /**
-   * Whether to capture user agent information.
-   * Defaults to true.
+   * Body fields to redact (sensitive data).
+   * Defaults to common sensitive body fields.
    */
-  captureUserAgent?: boolean;
-
-  /**
-   * Whether to capture IP address information.
-   * Defaults to true.
-   */
-  captureIp?: boolean;
-
-  /**
-   * Whether to capture timing information.
-   * Defaults to true.
-   */
-  captureTiming?: boolean;
-
-  /**
-   * Custom function to generate context names.
-   * Defaults to using the HTTP method and route path.
-   */
-  contextNameGenerator?: (req: Request) => string;
-
-  /**
-   * Custom function to determine if a route should be excluded from Vision tracking.
-   * Defaults to excluding health check and metrics endpoints.
-   */
-  shouldExcludeRoute?: (req: Request) => boolean;
-
-  /**
-   * Custom function to extract additional metadata from the request.
-   * This data will be merged into the initial context data.
-   */
-  extractMetadata?: (req: Request) => Record<string, unknown>;
-
-  /**
-   * Custom function to extract user information from the request.
-   * This will be stored under the 'user' key in the context.
-   */
-  extractUser?: (req: Request) => unknown;
-
-  /**
-   * Custom function to extract correlation IDs from the request.
-   * This will be stored under the 'correlation_id' key in the context.
-   */
-  extractCorrelationId?: (req: Request) => string | undefined;
-
-  /**
-   * Custom function to extract tenant/organization information.
-   * This will be stored under the 'tenant' key in the context.
-   */
-  extractTenant?: (req: Request) => string | undefined;
+  redactBodyFields?: string[];
 
   /**
    * Whether to include the request ID in the response headers.
    * Defaults to true.
    */
-  includeRequestIdInResponse?: boolean;
+  includeRequestId?: boolean;
 
   /**
    * The header name to use for the request ID in responses.
    * Defaults to 'X-Request-ID'.
    */
   requestIdHeader?: string;
-
-  /**
-   * Whether to capture error details when an error occurs.
-   * Defaults to true.
-   */
-  captureErrors?: boolean;
-
-  /**
-   * Whether to redact sensitive information from captured data.
-   * Defaults to true.
-   */
-  redactSensitiveData?: boolean;
-
-  /**
-   * List of header names to redact (e.g., ['authorization', 'cookie']).
-   * Defaults to common sensitive headers.
-   */
-  redactedHeaders?: string[];
-
-  /**
-   * List of query parameter names to redact.
-   * Defaults to common sensitive query params.
-   */
-  redactedQueryParams?: string[];
-
-  /**
-   * List of body field names to redact.
-   * Defaults to common sensitive body fields.
-   */
-  redactedBodyFields?: string[];
 }
 
 /**
@@ -181,49 +121,63 @@ export type VisionExpressMiddleware = (
  * Default configuration for the Vision Express middleware.
  */
 export const DEFAULT_VISION_EXPRESS_OPTIONS: Required<VisionExpressOptions> = {
-  captureRequestMetadata: true,
-  captureResponseMetadata: true,
+  enabled: true,
+  excludeRoutes: ["/health", "/metrics", "/status", "/favicon.ico"],
+  
+  // Smart user extraction - tries common patterns
+  extractUser: (req) => {
+    // Try to extract user from common authentication patterns
+    return (req as any).user || 
+           (req as any).session?.user ||
+           req.headers["x-user-id"] ||
+           req.headers["x-user"] ||
+           undefined;
+  },
+  
+  // Smart correlation ID extraction - tries common headers
+  correlationIdHeaders: [
+    "x-correlation-id",
+    "x-request-id", 
+    "x-trace-id",
+    "x-transaction-id",
+    "correlation-id",
+    "request-id"
+  ],
+  
+  // Sensible defaults for metadata capture
   captureHeaders: true,
-  captureBody: false,
-  captureQuery: true,
-  captureParams: true,
-  captureUserAgent: true,
-  captureIp: true,
-  captureTiming: true,
-  contextNameGenerator: (req) => `${req.method.toLowerCase()}.${req.route?.path || req.path}`,
-  shouldExcludeRoute: (req) => {
-    const path = req.path.toLowerCase();
-    return (
-      path.includes("/health") ||
-      path.includes("/metrics") ||
-      path.includes("/status") ||
-      path.includes("/ping") ||
-      path.includes("/favicon.ico")
-    );
-  },
-  extractMetadata: () => ({}),
-  extractUser: () => undefined,
-  extractCorrelationId: (req) => {
-    return (
-      req.headers["x-correlation-id"] as string ||
-      req.headers["x-request-id"] as string ||
-      req.headers["x-trace-id"] as string
-    );
-  },
-  extractTenant: () => undefined,
-  includeRequestIdInResponse: true,
-  requestIdHeader: "X-Request-ID",
-  captureErrors: true,
-  redactSensitiveData: true,
-  redactedHeaders: [
+  captureQueryParams: true,
+  captureBody: false, // Off by default for security
+  
+  // Sensible defaults for security
+  redactHeaders: [
     "authorization",
-    "cookie",
+    "cookie", 
     "x-api-key",
     "x-auth-token",
     "x-session-token",
+    "x-csrf-token"
   ],
-  redactedQueryParams: ["token", "key", "secret", "password"],
-  redactedBodyFields: ["password", "token", "secret", "key", "ssn", "credit_card"],
+  redactQueryParams: [
+    "token",
+    "key", 
+    "secret",
+    "password",
+    "auth",
+    "api_key"
+  ],
+  redactBodyFields: [
+    "password",
+    "ssn",
+    "credit_card",
+    "secret",
+    "api_key",
+    "private_key"
+  ],
+  
+  // Response options
+  includeRequestId: true,
+  requestIdHeader: "X-Request-ID",
 };
 
 /**
@@ -231,19 +185,10 @@ export const DEFAULT_VISION_EXPRESS_OPTIONS: Required<VisionExpressOptions> = {
  */
 export interface RequestMetadata {
   method: string;
-  url: string;
   path: string;
-  protocol: string;
-  hostname?: string;
-  ip?: string;
-  userAgent?: string;
   headers?: Record<string, string>;
   query?: Record<string, unknown>;
-  params?: Record<string, unknown>;
   body?: unknown;
-  correlationId?: string;
-  user?: unknown;
-  tenant?: string;
 }
 
 /**
@@ -251,13 +196,8 @@ export interface RequestMetadata {
  */
 export interface ResponseMetadata {
   statusCode: number;
-  statusMessage: string;
   headers?: Record<string, string>;
-  timing?: {
-    startTime: number;
-    endTime: number;
-    duration: number;
-  };
+  duration: number;
 }
 
 /**
