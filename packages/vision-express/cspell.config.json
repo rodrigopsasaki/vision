@@ -1,0 +1,36 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "datadog",
+    "express",
+    "middleware",
+    "observability",
+    "redact",
+    "redacted",
+    "redaction",
+    "rodrigopsasaki",
+    "supertest",
+    "tsup",
+    "vitest",
+    "vision"
+  ],
+  "ignoreWords": [],
+  "patterns": [
+    {
+      "name": "markdown-link",
+      "pattern": "\\[([^\\]]+)\\]\\([^)]+\\)",
+      "description": "Markdown links"
+    },
+    {
+      "name": "markdown-code",
+      "pattern": "`[^`]+`",
+      "description": "Markdown code"
+    },
+    {
+      "name": "markdown-code-block",
+      "pattern": "```[\\s\\S]*?```",
+      "description": "Markdown code blocks"
+    }
+  ]
+} 
