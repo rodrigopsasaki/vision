@@ -1,7 +1,7 @@
 {
   "name": "@rodrigopsasaki/vision",
   "type": "module",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Canonical context and structured observability for Node.js",
   "license": "MIT",
   "author": "Rodrigo Sasaki",
@@ -17,7 +17,9 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
     }
   },
   "files": [
