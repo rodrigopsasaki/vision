@@ -24,14 +24,15 @@ export class UsersService {
   constructor(private readonly visionService: VisionService) {}
 
   async findAll() {
-    // Track business context
-    this.visionService.setBusinessContext({
+    // Track business context using core Vision API
+    vision.merge("business_context", {
       operation: "list_users",
       data_access_level: "public",
     });
 
-    // Simulate database operation with performance tracking
-    return this.visionService.trackPerformance("database.users.findAll", async () => {
+    // Track database operation
+    const startTime = Date.now();
+    try {
       // Simulate slow database query
       await new Promise((resolve) => setTimeout(resolve, 100));
       
@@ -41,15 +42,34 @@ export class UsersService {
       ];
 
       // Track metrics
-      this.visionService.trackMetric("users_returned", users.length);
+      vision.push("metrics", {
+        metric: "users_returned",
+        value: users.length,
+        timestamp: new Date().toISOString(),
+      });
+
+      // Track performance
+      vision.push("performance", {
+        operation: "database.users.findAll",
+        duration_ms: Date.now() - startTime,
+        success: true,
+      });
       
       return users;
-    });
+    } catch (error) {
+      vision.push("performance", {
+        operation: "database.users.findAll",
+        duration_ms: Date.now() - startTime,
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   }
 
   async findById(id: string) {
     // Set business context for this operation
-    this.visionService.setBusinessContext({
+    vision.merge("business_context", {
       operation: "get_user_by_id",
       user_id: id,
       data_access_level: "private",
@@ -62,29 +82,34 @@ export class UsersService {
       const responseTime = Date.now() - startTime;
 
       // Track external API call
-      this.visionService.trackExternalAPICall(
-        "users-service",
-        `/users/${id}`,
-        "GET",
-        200,
-        responseTime,
-        { cache_hit: false }
-      );
+      vision.push("external_api_calls", {
+        service: "users-service",
+        endpoint: `/users/${id}`,
+        method: "GET",
+        status_code: 200,
+        duration_ms: responseTime,
+        cache_hit: false,
+        timestamp: new Date().toISOString(),
+      });
 
       const user = { id: parseInt(id), name: "John Doe", email: "john@example.com" };
       
       // Track successful retrieval
-      this.visionService.trackEvent("user_retrieved", {
+      vision.push("events", {
+        event: "user_retrieved",
         user_id: id,
         user_email: user.email,
+        timestamp: new Date().toISOString(),
       });
 
       return user;
     } catch (error) {
       // Track error with context
-      this.visionService.trackError("user_retrieval_failed", error, {
+      vision.merge("error", {
+        type: "user_retrieval_failed",
+        message: error instanceof Error ? error.message : String(error),
         user_id: id,
-        error_context: "database_query",
+        context: "database_query",
       });
       throw error;
     }
@@ -92,7 +117,7 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto) {
     // Set business context
-    this.visionService.setBusinessContext({
+    vision.merge("business_context", {
       operation: "create_user",
       user_email: createUserDto.email,
       registration_source: "api",
@@ -105,13 +130,14 @@ export class UsersService {
       const executionTime = Date.now() - startTime;
 
       // Track database operation
-      this.visionService.trackDatabaseOperation(
-        "insert",
-        "users",
-        executionTime,
-        1,
-        { table_size_before: 1000 }
-      );
+      vision.push("database_operations", {
+        operation: "insert",
+        table: "users",
+        duration_ms: executionTime,
+        rows_affected: 1,
+        table_size_before: 1000,
+        timestamp: new Date().toISOString(),
+      });
 
       const user = {
         id: Math.floor(Math.random() * 1000),
@@ -121,7 +147,8 @@ export class UsersService {
       };
 
       // Track successful creation
-      this.visionService.trackEvent("user_created", {
+      vision.push("events", {
+        event: "user_created",
         user_id: user.id,
         user_email: user.email,
         registration_timestamp: user.createdAt.toISOString(),
@@ -129,7 +156,9 @@ export class UsersService {
 
       return user;
     } catch (error) {
-      this.visionService.trackError("user_creation_failed", error, {
+      vision.merge("error", {
+        type: "user_creation_failed",
+        message: error instanceof Error ? error.message : String(error),
         user_email: createUserDto.email,
         validation_passed: true,
       });
@@ -165,7 +194,7 @@ export class UsersController {
   @Get(":id")
   @VisionPerformance("api.users.get_by_id") // Enables performance tracking
   async getUser(@Param("id") id: string) {
-    // Manually add context data
+    // Manually add context data using core Vision API
     vision.set("requested_user_id", id);
     vision.set("access_level", "authenticated");
 
@@ -236,6 +265,7 @@ export class HealthController {
 
       // Security settings
       redactHeaders: ["authorization", "cookie", "x-api-key"],
+      redactQueryParams: ["token", "api_key"],
       redactBodyFields: ["password", "token", "secret"],
 
       // Response headers

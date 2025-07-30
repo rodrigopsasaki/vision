@@ -1,17 +1,16 @@
 # @rodrigopsasaki/vision-nestjs
 
-Advanced NestJS integration for Vision observability framework with decorators, guards, dynamic modules, and deep framework integration.
+NestJS integration for Vision observability framework with automatic context capture, decorators, and guards.
 
 ## Features
 
-- 🎯 **Deep NestJS Integration** - Works with HTTP, GraphQL, WebSocket, and Microservice contexts
-- 🎨 **Rich Decorators** - `@VisionContext`, `@VisionCapture`, `@VisionSecurity`, `@VisionAudit`, and more
-- 🔒 **Security Guard** - Built-in guard for authentication and authorization tracking
-- 🏗️ **Dynamic Module** - Async configuration with factory support
-- 📊 **Performance Tracking** - Automatic execution time, memory usage, and slow operation detection  
-- 🛡️ **Smart Data Redaction** - Automatic sensitive data masking
-- 🔧 **Injectable Service** - DI-friendly Vision service with business context methods
-- 📡 **Multi-Context Support** - HTTP, GraphQL, WebSocket, and Microservice message tracking
+- 🎯 **Automatic Context Capture** - Automatically captures HTTP, GraphQL, WebSocket, and Microservice metadata
+- 🎨 **Configuration Decorators** - `@VisionContext`, `@VisionCapture`, `@VisionSecurity`, `@VisionAudit`, `@VisionPerformance`
+- 🔒 **Security Guard** - Optional guard for enhanced monitoring and audit logging
+- 🏗️ **Dynamic Module** - Sync and async configuration with factory support
+- 📊 **Performance Tracking** - Automatic execution time and memory usage tracking
+- 🛡️ **Smart Data Redaction** - Configurable sensitive data masking
+- 📡 **Multi-Context Support** - Works seamlessly with all NestJS execution contexts
 - ⚡ **Zero Configuration** - Works out of the box with sensible defaults
 
 ## Installation
@@ -47,6 +46,7 @@ export class AppModule {}
 ```typescript
 import { Controller, Get, Post, Body } from '@nestjs/common';
 import { VisionContext, VisionPerformance, VisionSecurity } from '@rodrigopsasaki/vision-nestjs';
+import { vision } from '@rodrigopsasaki/vision';
 
 @Controller('users')
 export class UsersController {
@@ -56,12 +56,21 @@ export class UsersController {
     captureReturn: false 
   })
   async getUsers() {
+    // The interceptor automatically creates a Vision context
+    // You can add custom data using the core Vision API
+    vision.set('operation', 'list_users');
+    vision.set('data_access_level', 'public');
+    
     return this.usersService.findAll();
   }
 
   @Get(':id')
   @VisionPerformance('users.get_by_id')
   async getUser(@Param('id') id: string) {
+    // Add custom context data
+    vision.set('requested_user_id', id);
+    vision.set('access_level', 'authenticated');
+
     return this.usersService.findById(id);
   }
 
@@ -72,24 +81,23 @@ export class UsersController {
     captureIpAddress: true,
   })
   async login(@Body() loginDto: LoginDto) {
+    // Security decorator automatically captures security-relevant data
     return this.authService.login(loginDto);
   }
 }
 ```
 
-### Using the Injectable Service
+### Using Vision in Services
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { VisionService } from '@rodrigopsasaki/vision-nestjs';
+import { vision } from '@rodrigopsasaki/vision';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly visionService: VisionService) {}
-
   async createUser(userData: CreateUserDto) {
     // Set business context
-    this.visionService.setBusinessContext({
+    vision.merge('business_context', {
       operation: 'user_creation',
       user_type: userData.type,
     });
@@ -98,27 +106,46 @@ export class UsersService {
       const user = await this.userRepository.create(userData);
       
       // Track success event
-      this.visionService.trackEvent('user_created', {
+      vision.push('events', {
+        event: 'user_created',
         user_id: user.id,
-        created_at: user.createdAt,
+        timestamp: new Date().toISOString(),
       });
       
       return user;
     } catch (error) {
-      // Enhanced error tracking
-      this.visionService.trackError('user_creation_failed', error, {
+      // Track error
+      vision.merge('error', {
+        type: 'user_creation_failed',
+        message: error.message,
         attempted_email: userData.email,
       });
       throw error;
     }
   }
 
-  async getAnalytics(userId: string) {
-    return this.visionService.trackPerformance('get_analytics', async () => {
-      const analytics = await this.analyticsService.getUser(userId);
-      this.visionService.trackMetric('data_points', analytics.length);
-      return analytics;
-    });
+  async findAll() {
+    const startTime = Date.now();
+    
+    try {
+      const users = await this.userRepository.find();
+      
+      // Track performance
+      vision.push('performance', {
+        operation: 'users.findAll',
+        duration_ms: Date.now() - startTime,
+        result_count: users.length,
+      });
+      
+      return users;
+    } catch (error) {
+      vision.push('performance', {
+        operation: 'users.findAll',
+        duration_ms: Date.now() - startTime,
+        error: error.message,
+      });
+      throw error;
+    }
   }
 }
 ```
@@ -268,85 +295,29 @@ export class HealthController {
 
 ## VisionService API
 
-The injectable `VisionService` provides additional functionality:
-
-### Business Context
+The injectable `VisionService` provides convenient access to Vision:
 
 ```typescript
-// Set business-relevant context
-visionService.setBusinessContext({
-  operation: 'order_processing',
-  customer_tier: 'premium',
-  region: 'us-east-1',
-});
-```
+import { Injectable } from '@nestjs/common';
+import { VisionService } from '@rodrigopsasaki/vision-nestjs';
 
-### Event Tracking
+@Injectable()
+export class MyService {
+  constructor(private readonly visionService: VisionService) {}
 
-```typescript
-// Track business events
-visionService.trackEvent('order_completed', {
-  order_id: 'order-123',
-  total_amount: 299.99,
-  payment_method: 'credit_card',
-});
-```
-
-### Error Tracking
-
-```typescript
-// Enhanced error tracking with categorization
-visionService.trackError('payment_processing', error, {
-  order_id: 'order-123',
-  payment_provider: 'stripe',
-  retry_attempt: 2,
-});
-```
-
-### Performance Tracking
-
-```typescript
-// Wrap operations with performance tracking
-const result = await visionService.trackPerformance('complex_calculation', async () => {
-  return await performComplexCalculation();
-});
-```
-
-### Metrics
-
-```typescript
-// Track custom metrics
-visionService.trackMetric('processed_orders', 150, {
-  region: 'us-east-1',
-  tier: 'premium',
-});
-```
-
-### External API Tracking
-
-```typescript
-// Track external API calls
-visionService.trackExternalAPICall(
-  'payment-service',
-  '/api/v1/charge',
-  'POST',
-  200,
-  150, // response time
-  { provider: 'stripe' }
-);
-```
-
-### Database Operation Tracking
-
-```typescript
-// Track database operations
-visionService.trackDatabaseOperation(
-  'select',
-  'users',
-  45, // execution time
-  100, // rows affected
-  { index_usage: 'optimal' }
-);
+  doSomething() {
+    // Check if in Vision context
+    if (this.visionService.isInContext()) {
+      // Access the vision instance directly
+      const vision = this.visionService.vision;
+      
+      // Use any core Vision API methods
+      vision.set('key', 'value');
+      vision.push('events', { event: 'something_happened' });
+      vision.merge('metadata', { additional: 'data' });
+    }
+  }
+}
 ```
 
 ## Configuration Options
@@ -420,14 +391,12 @@ Vision NestJS automatically detects and handles different execution contexts:
 ```typescript
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private visionService: VisionService) {}
-  
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest();
     const isAuthenticated = this.validateToken(request.headers.authorization);
     
-    // Add authentication context
-    this.visionService.addSecurityContext({
+    // Add authentication context using core Vision API
+    vision.merge('security', {
       authentication_success: isAuthenticated,
       user_id: request.user?.id,
     });
@@ -442,13 +411,13 @@ export class AuthGuard implements CanActivate {
 ```typescript
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
-  constructor(private visionService: VisionService) {}
-  
   catch(exception: unknown, host: ArgumentsHost) {
     // Track exceptions in Vision context
-    if (this.visionService.isInContext()) {
-      this.visionService.trackError('unhandled_exception', exception);
-    }
+    vision.merge('error', {
+      type: 'unhandled_exception',
+      message: exception instanceof Error ? exception.message : String(exception),
+      timestamp: new Date().toISOString(),
+    });
     
     // Handle exception...
   }
@@ -474,21 +443,21 @@ export class TestAppModule {}
 
 ## Best Practices
 
-### 1. Use Appropriate Decorators
+### 1. Use Core Vision API
+- Always use the core Vision API (`vision.set`, `vision.push`, `vision.merge`) for adding custom data
+- The package focuses on automatic metadata collection from NestJS
+- Don't create package-specific abstractions over Vision
+
+### 2. Use Appropriate Decorators
 - `@VisionPerformance` for slow or resource-intensive operations
 - `@VisionSecurity` for authentication and authorization endpoints
 - `@VisionAudit` for compliance-critical operations
 - `@VisionIgnore` for health checks and metrics endpoints
 
-### 2. Configure Data Capture Thoughtfully
+### 3. Configure Data Capture Thoughtfully
 - Enable `captureBody` only when necessary and safe
 - Always configure `redactHeaders` and `redactBodyFields` for security
 - Use `captureReturn: false` for endpoints returning sensitive data
-
-### 3. Leverage the Vision Service
-- Use business context methods to add domain-specific information
-- Track custom metrics for business KPIs
-- Use performance tracking for optimization insights
 
 ### 4. Environment-Specific Configuration
 - Disable or limit data capture in production
@@ -501,42 +470,17 @@ export class TestAppModule {}
 - Configure appropriate redaction patterns
 - Be mindful of GDPR and privacy requirements
 
-## Advanced Features
+## Philosophy
 
-### Child Contexts
-```typescript
-async processOrder(orderId: string) {
-  return this.visionService.withChildContext('order.payment', async () => {
-    // Process payment in isolated context
-    return this.paymentService.charge(orderId);
-  });
-}
-```
+This package follows the same philosophy as other Vision integration packages:
 
-### Custom Context Names
-```typescript
-VisionModule.forRoot({
-  generateContextName: (context) => {
-    const method = context.switchToHttp().getRequest().method;
-    const controller = context.getClass().name;
-    const handler = context.getHandler().name;
-    return `api.${method.toLowerCase()}.${controller}.${handler}`;
-  },
-})
-```
+1. **Use Core Vision API** - No custom methods that duplicate or wrap Vision's functionality
+2. **Automatic Metadata Collection** - Focus on automatically capturing NestJS-specific metadata
+3. **Zero Learning Curve** - Users only need to know the core Vision API
+4. **Configuration Over Code** - Decorators and module options control behavior
+5. **Framework Integration** - Deep integration with NestJS patterns and conventions
 
-### Error Transformation
-```typescript
-VisionModule.forRoot({
-  transformError: (error, context) => ({
-    error_type: error.constructor.name,
-    error_message: error.message,
-    controller: context.getClass().name,
-    handler: context.getHandler().name,
-    timestamp: new Date().toISOString(),
-  }),
-})
-```
+The package handles the complexity of extracting metadata from various NestJS contexts while keeping the API surface minimal and consistent with Vision core.
 
 ## License
 

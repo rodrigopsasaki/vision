@@ -5,7 +5,6 @@ import {
   Injectable,
   Module,
   UseGuards,
-  UseInterceptors,
   ExecutionContext,
   CanActivate,
 } from "@nestjs/common";
@@ -37,8 +36,8 @@ export class AuthGuard implements CanActivate {
     const authHeader = request.headers.authorization;
     const isAuthenticated = authHeader && authHeader.startsWith("Bearer ");
 
-    // Add authentication context to Vision
-    this.visionService.addSecurityContext({
+    // Add authentication context to Vision using core API
+    vision.merge("security", {
       authentication_attempt: true,
       authentication_method: authHeader ? "bearer_token" : "none",
       authentication_success: isAuthenticated,
@@ -47,11 +46,13 @@ export class AuthGuard implements CanActivate {
     });
 
     if (!isAuthenticated) {
-      // Track failed authentication
-      this.visionService.trackEvent("authentication_failed", {
+      // Track failed authentication using core Vision API
+      vision.push("events", {
+        event: "authentication_failed",
         reason: "missing_or_invalid_token",
         ip_address: request.ip,
         requested_resource: request.path,
+        timestamp: new Date().toISOString(),
       });
       return false;
     }
@@ -65,9 +66,11 @@ export class AuthGuard implements CanActivate {
     };
 
     // Track successful authentication
-    this.visionService.trackEvent("authentication_success", {
+    vision.push("events", {
+      event: "authentication_success",
       user_id: request.user.id,
       user_roles: request.user.roles,
+      timestamp: new Date().toISOString(),
     });
 
     return true;
@@ -80,11 +83,16 @@ export class AnalyticsService {
   constructor(private readonly visionService: VisionService) {}
 
   async generateReport(reportType: string, filters: any) {
-    // Create child context for nested operation
-    return this.visionService.withChildContext(
-      `analytics.report.${reportType}`,
+    // Create child context for nested operation using core Vision API
+    return vision.observe(
+      {
+        name: `analytics.report.${reportType}`,
+        scope: "nested",
+        source: "nestjs",
+      },
       async () => {
-        this.visionService.setBusinessContext({
+        // Set business context using core API
+        vision.merge("business_context", {
           report_type: reportType,
           filter_count: Object.keys(filters).length,
           estimated_complexity: this.calculateComplexity(filters),
@@ -94,46 +102,58 @@ export class AnalyticsService {
         const steps = ["fetch_data", "process_data", "generate_charts", "format_output"];
         
         for (const step of steps) {
-          await this.visionService.trackPerformance(
-            `report_step.${step}`,
-            async () => {
-              // Simulate step processing time
-              const processingTime = Math.random() * 500 + 100;
-              await new Promise((resolve) => setTimeout(resolve, processingTime));
-              
-              // Track step completion
-              this.visionService.trackEvent("report_step_completed", {
-                step,
-                processing_time_ms: processingTime,
-              });
-            }
-          );
+          const stepStartTime = Date.now();
+          try {
+            // Simulate step processing time
+            const processingTime = Math.random() * 500 + 100;
+            await new Promise((resolve) => setTimeout(resolve, processingTime));
+            
+            // Track step completion using core API
+            vision.push("events", {
+              event: "report_step_completed",
+              step,
+              processing_time_ms: processingTime,
+              timestamp: new Date().toISOString(),
+            });
+
+            vision.push("performance", {
+              operation: `report_step.${step}`,
+              duration_ms: Date.now() - stepStartTime,
+              success: true,
+            });
+          } catch (error) {
+            vision.push("performance", {
+              operation: `report_step.${step}`,
+              duration_ms: Date.now() - stepStartTime,
+              success: false,
+              error: error instanceof Error ? error.message : String(error),
+            });
+            throw error;
+          }
         }
 
         // Track database operations during report generation
-        this.visionService.trackDatabaseOperation(
-          "select",
-          "analytics_data",
-          250,
-          1500,
-          {
-            query_complexity: "high",
-            index_usage: "optimal",
-          }
-        );
+        vision.push("database_operations", {
+          operation: "select",
+          table: "analytics_data",
+          duration_ms: 250,
+          rows_affected: 1500,
+          query_complexity: "high",
+          index_usage: "optimal",
+          timestamp: new Date().toISOString(),
+        });
 
         // Simulate external API calls for enrichment
-        this.visionService.trackExternalAPICall(
-          "enrichment-service",
-          "/api/v1/enrich",
-          "POST",
-          200,
-          180,
-          {
-            enrichment_type: "geo_data",
-            records_enriched: 1500,
-          }
-        );
+        vision.push("external_api_calls", {
+          service: "enrichment-service",
+          endpoint: "/api/v1/enrich",
+          method: "POST",
+          status_code: 200,
+          duration_ms: 180,
+          enrichment_type: "geo_data",
+          records_enriched: 1500,
+          timestamp: new Date().toISOString(),
+        });
 
         const report = {
           id: `report-${Date.now()}`,
@@ -143,12 +163,19 @@ export class AnalyticsService {
           processingTimeMs: Date.now() - Date.now(),
         };
 
-        // Track final metrics
-        this.visionService.trackMetric("report_data_points", report.dataPoints);
-        this.visionService.trackEvent("report_generated", {
+        // Track final metrics using core API
+        vision.push("metrics", {
+          metric: "report_data_points",
+          value: report.dataPoints,
+          timestamp: new Date().toISOString(),
+        });
+
+        vision.push("events", {
+          event: "report_generated",
           report_id: report.id,
           report_type: reportType,
           data_points: report.dataPoints,
+          timestamp: new Date().toISOString(),
         });
 
         return report;
@@ -182,17 +209,20 @@ export class AnalyticsController {
     requiresApproval: false,
   })
   async getSalesReport() {
-    // Add specific context for this high-value operation
-    this.visionService.setBusinessContext({
+    // Add specific context for this high-value operation using core API
+    vision.merge("business_context", {
       report_category: "financial",
       data_sensitivity: "high",
       compliance_required: true,
     });
 
-    // Track user interaction
-    this.visionService.trackUserInteraction("report_request", "sales_report", {
+    // Track user interaction using core API
+    vision.push("user_interactions", {
+      action: "report_request",
+      target: "sales_report",
       dashboard_source: "main_dashboard",
       user_role: "analyst",
+      timestamp: new Date().toISOString(),
     });
 
     return this.analyticsService.generateReport("sales", {
@@ -214,7 +244,11 @@ export class AnalyticsController {
   })
   async getUserEngagementReport() {
     // This report is less sensitive but still important for tracking
-    this.visionService.trackUserInteraction("report_request", "user_engagement_report");
+    vision.push("user_interactions", {
+      action: "report_request",
+      target: "user_engagement_report",
+      timestamp: new Date().toISOString(),
+    });
 
     return this.analyticsService.generateReport("user_engagement", {
       period: "last_7_days",
