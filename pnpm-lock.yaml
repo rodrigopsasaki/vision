@@ -51,7 +51,7 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@20.19.7)(tsx@4.20.3)
 
-  packages/vision:
+  packages/core/vision:
     devDependencies:
       '@types/node':
         specifier: ^20.0.0
@@ -96,11 +96,11 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@20.19.7)(tsx@4.20.3)
 
-  packages/vision-datadog-exporter:
+  packages/exporters/vision-datadog-exporter:
     dependencies:
       '@rodrigopsasaki/vision':
         specifier: workspace:*
-        version: link:../vision
+        version: link:../../core/vision
       node-fetch:
         specifier: ^3.3.2
         version: 3.3.2
@@ -142,11 +142,57 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@20.19.7)(tsx@4.20.3)
 
-  packages/vision-express:
+  packages/integrations/data/vision-prisma:
     dependencies:
       '@rodrigopsasaki/vision':
         specifier: ^0.3.0
-        version: link:../vision
+        version: link:../../../core/vision
+    devDependencies:
+      '@prisma/client':
+        specifier: ^5.0.0
+        version: 5.22.0(prisma@5.22.0)
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.7
+      '@typescript-eslint/eslint-plugin':
+        specifier: ^8.36.0
+        version: 8.36.0(@typescript-eslint/parser@8.36.0)(eslint@9.31.0)(typescript@5.8.3)
+      '@typescript-eslint/parser':
+        specifier: ^8.36.0
+        version: 8.36.0(eslint@9.31.0)(typescript@5.8.3)
+      '@vitest/coverage-v8':
+        specifier: ^3.2.4
+        version: 3.2.4(vitest@3.2.4)
+      cspell:
+        specifier: ^9.1.5
+        version: 9.1.5
+      eslint:
+        specifier: ^9.31.0
+        version: 9.31.0
+      eslint-plugin-import:
+        specifier: ^2.32.0
+        version: 2.32.0(@typescript-eslint/parser@8.36.0)(eslint@9.31.0)
+      prettier:
+        specifier: ^3.6.2
+        version: 3.6.2
+      prisma:
+        specifier: ^5.0.0
+        version: 5.22.0
+      tsup:
+        specifier: ^8.5.0
+        version: 8.5.0(tsx@4.20.3)(typescript@5.8.3)
+      typescript:
+        specifier: ^5.8.3
+        version: 5.8.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/node@20.19.7)(tsx@4.20.3)
+
+  packages/integrations/web/vision-express:
+    dependencies:
+      '@rodrigopsasaki/vision':
+        specifier: ^0.3.0
+        version: link:../../../core/vision
     devDependencies:
       '@types/express':
         specifier: ^4.17.21
@@ -194,7 +240,7 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@20.19.7)(tsx@4.20.3)
 
-  packages/vision-fastify:
+  packages/integrations/web/vision-fastify:
     dependencies:
       fastify-plugin:
         specifier: ^5.0.1
@@ -208,7 +254,7 @@ importers:
         version: 4.1.0(@sinclair/typebox@0.33.22)
       '@rodrigopsasaki/vision':
         specifier: workspace:*
-        version: link:../vision
+        version: link:../../../core/vision
       '@types/micromatch':
         specifier: ^4.0.9
         version: 4.0.9
@@ -255,7 +301,7 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@20.19.7)(tsx@4.20.3)
 
-  packages/vision-koa:
+  packages/integrations/web/vision-koa:
     dependencies:
       micromatch:
         specifier: ^4.0.8
@@ -263,7 +309,7 @@ importers:
     devDependencies:
       '@rodrigopsasaki/vision':
         specifier: workspace:*
-        version: link:../vision
+        version: link:../../../core/vision
       '@types/koa':
         specifier: ^2.15.0
         version: 2.15.0
@@ -316,7 +362,7 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@20.19.7)(tsx@4.20.3)
 
-  packages/vision-nestjs:
+  packages/integrations/web/vision-nestjs:
     dependencies:
       '@nestjs/common':
         specifier: ^8.0.0
@@ -335,7 +381,7 @@ importers:
         version: 8.4.7(@nestjs/common@8.4.7)(@nestjs/core@8.4.7)(reflect-metadata@0.1.14)(rxjs@7.8.2)
       '@rodrigopsasaki/vision':
         specifier: workspace:*
-        version: link:../vision
+        version: link:../../../core/vision
       rxjs:
         specifier: ^7.0.0
         version: 7.8.2
@@ -376,52 +422,6 @@ importers:
       supertest:
         specifier: ^6.3.4
         version: 6.3.4
-      tsup:
-        specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.3)(typescript@5.8.3)
-      typescript:
-        specifier: ^5.8.3
-        version: 5.8.3
-      vitest:
-        specifier: ^3.2.4
-        version: 3.2.4(@types/node@20.19.7)(tsx@4.20.3)
-
-  packages/vision-prisma:
-    dependencies:
-      '@rodrigopsasaki/vision':
-        specifier: ^0.3.0
-        version: link:../vision
-    devDependencies:
-      '@prisma/client':
-        specifier: ^5.0.0
-        version: 5.22.0(prisma@5.22.0)
-      '@types/node':
-        specifier: ^20.0.0
-        version: 20.19.7
-      '@typescript-eslint/eslint-plugin':
-        specifier: ^8.36.0
-        version: 8.36.0(@typescript-eslint/parser@8.36.0)(eslint@9.31.0)(typescript@5.8.3)
-      '@typescript-eslint/parser':
-        specifier: ^8.36.0
-        version: 8.36.0(eslint@9.31.0)(typescript@5.8.3)
-      '@vitest/coverage-v8':
-        specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4)
-      cspell:
-        specifier: ^9.1.5
-        version: 9.1.5
-      eslint:
-        specifier: ^9.31.0
-        version: 9.31.0
-      eslint-plugin-import:
-        specifier: ^2.32.0
-        version: 2.32.0(@typescript-eslint/parser@8.36.0)(eslint@9.31.0)
-      prettier:
-        specifier: ^3.6.2
-        version: 3.6.2
-      prisma:
-        specifier: ^5.0.0
-        version: 5.22.0
       tsup:
         specifier: ^8.5.0
         version: 8.5.0(tsx@4.20.3)(typescript@5.8.3)

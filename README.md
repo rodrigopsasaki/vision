@@ -164,11 +164,15 @@ vision.init({
 });
 ```
 
-## Framework Integrations
+## Vision Ecosystem
 
-Once you understand Vision core, you can integrate it with your favorite Node.js framework:
+Vision provides a comprehensive set of integrations to instrument your entire Node.js stack:
 
-### Express.js
+### Web Framework Integrations
+
+Automatically create Vision contexts for every HTTP request:
+
+#### Express.js
 ```bash
 npm install @rodrigopsasaki/vision-express
 ```
@@ -188,7 +192,7 @@ app.get('/users/:id', async (req, res) => {
 });
 ```
 
-### Fastify
+#### Fastify
 ```bash
 npm install @rodrigopsasaki/vision-fastify
 ```
@@ -204,7 +208,7 @@ fastify.get('/users/:id', async (request, reply) => {
 });
 ```
 
-### Koa
+#### Koa
 ```bash
 npm install @rodrigopsasaki/vision-koa
 ```
@@ -220,7 +224,7 @@ app.use(async (ctx) => {
 });
 ```
 
-### NestJS
+#### NestJS
 ```bash
 npm install @rodrigopsasaki/vision-nestjs
 ```
@@ -241,6 +245,51 @@ export class UsersController {
     return await this.userService.getUser(id);
   }
 }
+```
+
+### Data Layer Integrations
+
+Automatic observability for your database operations:
+
+#### Prisma ORM
+```bash
+npm install @rodrigopsasaki/vision-prisma
+```
+
+```typescript
+import { PrismaClient } from '@prisma/client';
+import { instrumentPrisma } from '@rodrigopsasaki/vision-prisma';
+
+// Just wrap your Prisma client - that's it!
+const prisma = instrumentPrisma(new PrismaClient());
+
+// All database operations are now automatically tracked
+const users = await prisma.user.findMany();
+// Vision captures: operation, duration, result count, success/failure
+```
+
+### Exporters
+
+Send your observability data to production monitoring platforms:
+
+#### Datadog
+```bash
+npm install @rodrigopsasaki/vision-datadog-exporter
+```
+
+```typescript
+import { vision } from '@rodrigopsasaki/vision';
+import { createDatadogExporter } from '@rodrigopsasaki/vision-datadog-exporter';
+
+vision.init({
+  exporters: [
+    createDatadogExporter({
+      apiKey: process.env.DATADOG_API_KEY,
+      service: 'my-service',
+      environment: 'production',
+    }),
+  ],
+});
 ```
 
 ## Framework Support Status
