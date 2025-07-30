@@ -1,0 +1,86 @@
+// This is an example Prisma schema file for the Vision Prisma examples
+// To use these examples:
+// 1. Create a new directory and copy this schema
+// 2. Run: npx prisma init
+// 3. Update your DATABASE_URL in .env
+// 4. Run: npx prisma db push
+// 5. Install dependencies: npm install @prisma/client @rodrigopsasaki/vision @rodrigopsasaki/vision-prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // You can change this to mysql, sqlite, etc.
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  profile  Profile?
+  posts    Post[]
+  comments Comment[]
+  likes    Like[]
+}
+
+model Profile {
+  id        Int      @id @default(autoincrement())
+  bio       String
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  user   User @relation(fields: [userId], references: [id])
+  userId Int  @unique
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  author   User      @relation(fields: [authorId], references: [id])
+  authorId Int
+  comments Comment[]
+  likes    Like[]
+  
+  @@index([authorId])
+  @@index([published])
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  post   Post @relation(fields: [postId], references: [id])
+  postId Int
+  author User @relation(fields: [authorId], references: [id])
+  authorId Int
+  
+  @@index([postId])
+  @@index([authorId])
+}
+
+model Like {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  post   Post @relation(fields: [postId], references: [id])
+  postId Int
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
+  
+  @@unique([userId, postId])
+  @@index([postId])
+}
