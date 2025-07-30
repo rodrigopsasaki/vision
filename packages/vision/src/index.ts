@@ -1,2 +1,2 @@
-export type { VisionExporter, VisionContext } from "./core/types";
+export type { VisionExporter, VisionContext, NormalizationConfig } from "./core/types";
 export { vision } from "./core/vision";
