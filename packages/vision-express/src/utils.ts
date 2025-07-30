@@ -110,6 +110,7 @@ export function extractResponseMetadata(
   const metadata: ResponseMetadata = {
     statusCode: res.statusCode,
     statusMessage: res.statusMessage || getStatusMessage(res.statusCode),
+    duration,
     timing: {
       startTime,
       endTime,
@@ -176,11 +177,22 @@ export function mergeOptions(
   userOptions: Partial<VisionExpressOptions> = {},
 ): Required<VisionExpressOptions> {
   return {
+    enabled: userOptions.enabled ?? true,
+    excludeRoutes: userOptions.excludeRoutes ?? ["/health", "/metrics", "/status", "/favicon.ico"],
+    correlationIdHeaders: userOptions.correlationIdHeaders ?? [
+      "x-correlation-id",
+      "x-request-id", 
+      "x-trace-id",
+      "x-transaction-id",
+      "correlation-id",
+      "request-id"
+    ],
     captureRequestMetadata: userOptions.captureRequestMetadata ?? true,
     captureResponseMetadata: userOptions.captureResponseMetadata ?? true,
     captureHeaders: userOptions.captureHeaders ?? true,
     captureBody: userOptions.captureBody ?? false,
     captureQuery: userOptions.captureQuery ?? true,
+    captureQueryParams: userOptions.captureQueryParams ?? userOptions.captureQuery ?? true,
     captureParams: userOptions.captureParams ?? true,
     captureUserAgent: userOptions.captureUserAgent ?? true,
     captureIp: userOptions.captureIp ?? true,
@@ -209,23 +221,45 @@ export function mergeOptions(
     }),
     extractTenant: userOptions.extractTenant ?? (() => undefined),
     includeRequestIdInResponse: userOptions.includeRequestIdInResponse ?? true,
+    includeRequestId: userOptions.includeRequestId ?? userOptions.includeRequestIdInResponse ?? true,
     requestIdHeader: userOptions.requestIdHeader ?? "X-Request-ID",
     captureErrors: userOptions.captureErrors ?? true,
     redactSensitiveData: userOptions.redactSensitiveData ?? true,
-    redactedHeaders: userOptions.redactedHeaders ?? [
+    redactedHeaders: userOptions.redactedHeaders ?? userOptions.redactHeaders ?? [
       "authorization",
       "cookie",
       "x-api-key",
       "x-auth-token",
       "x-session-token",
     ],
-    redactedQueryParams: userOptions.redactedQueryParams ?? [
+    redactHeaders: userOptions.redactHeaders ?? userOptions.redactedHeaders ?? [
+      "authorization",
+      "cookie",
+      "x-api-key",
+      "x-auth-token",
+      "x-session-token",
+    ],
+    redactedQueryParams: userOptions.redactedQueryParams ?? userOptions.redactQueryParams ?? [
       "token",
       "key",
       "secret",
       "password",
     ],
-    redactedBodyFields: userOptions.redactedBodyFields ?? [
+    redactQueryParams: userOptions.redactQueryParams ?? userOptions.redactedQueryParams ?? [
+      "token",
+      "key",
+      "secret",
+      "password",
+    ],
+    redactedBodyFields: userOptions.redactedBodyFields ?? userOptions.redactBodyFields ?? [
+      "password",
+      "token",
+      "secret",
+      "key",
+      "ssn",
+      "credit_card",
+    ],
+    redactBodyFields: userOptions.redactBodyFields ?? userOptions.redactedBodyFields ?? [
       "password",
       "token",
       "secret",
