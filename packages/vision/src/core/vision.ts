@@ -1,6 +1,7 @@
 import { createExporter, registerExporter, unregisterExporter } from "../exporters/exports";
 import { fanOutToExporters } from "../exporters/fanOut";
 import { generateId } from "../utils/generateId";
+import { normalizeContext } from "../utils/normalizeContext";
 
 import { visionSet, visionGet, visionPush, visionMerge, getContext } from "./context";
 import { getContextStore, getRuntimeState, initVisionRuntime } from "./global";
@@ -55,7 +56,8 @@ export async function observe<T>(
   const store = getContextStore();
 
   return store.run(context, async () => {
-    const exporters = getRuntimeState().exporters.map(createExporter);
+    const runtimeState = getRuntimeState();
+    const exporters = runtimeState.exporters.map(createExporter);
 
     // Execute exporter before hooks
     for (const exporter of exporters) {
@@ -82,7 +84,9 @@ export async function observe<T>(
         }
       }
 
-      fanOutToExporters(exporters, context);
+      // Normalize the context before sending to exporters
+      const normalizedContext = normalizeContext(context, runtimeState.normalization);
+      fanOutToExporters(exporters, normalizedContext);
       return result;
     } catch (err) {
       // Execute exporter onError hooks
@@ -99,7 +103,9 @@ export async function observe<T>(
         }
       }
 
-      fanOutToExporters(exporters, context, err);
+      // Normalize the context before sending to exporters (even for errors)
+      const normalizedContext = normalizeContext(context, runtimeState.normalization);
+      fanOutToExporters(exporters, normalizedContext, err);
       throw err;
     }
   });

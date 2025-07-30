@@ -18,10 +18,20 @@ declare global {
 globalThis.__vision__ ??= {};
 
 /**
+ * Default normalization configuration.
+ */
+const DEFAULT_NORMALIZATION_CONFIG = {
+  enabled: false,
+  keyCasing: "none" as const,
+  deep: true,
+};
+
+/**
  * Initializes the vision runtime with optional custom configuration.
  *
  * This function sets up the global vision runtime state, including the default
- * exporters. If no options are provided, it uses the default console exporter.
+ * exporters and normalization settings. If no options are provided, it uses 
+ * the default console exporter and disabled normalization.
  *
  * @param options - Optional runtime configuration
  *
@@ -40,11 +50,24 @@ globalThis.__vision__ ??= {};
  *     }
  *   ]
  * });
+ *
+ * // Initialize with key normalization
+ * initVisionRuntime({
+ *   normalization: {
+ *     enabled: true,
+ *     keyCasing: "snake_case",
+ *     deep: true
+ *   }
+ * });
  * ```
  */
 export function initVisionRuntime(options?: Partial<VisionRuntimeState>) {
   globalThis.__vision__.runtimeState = {
     exporters: (options?.exporters ?? [defaultConsoleExporter]).map(createExporter),
+    normalization: {
+      ...DEFAULT_NORMALIZATION_CONFIG,
+      ...options?.normalization,
+    },
   };
 }
 

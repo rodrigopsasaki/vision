@@ -117,6 +117,29 @@ export interface VisionLogger {
 }
 
 /**
+ * Configuration options for key normalization.
+ */
+export interface NormalizationConfig {
+  /**
+   * Whether to enable key normalization.
+   * @default false
+   */
+  enabled: boolean;
+
+  /**
+   * The casing style to apply to all context keys.
+   * @default "none"
+   */
+  keyCasing: "camelCase" | "snake_case" | "kebab-case" | "PascalCase" | "none";
+
+  /**
+   * Whether to normalize keys in nested objects and arrays.
+   * @default true
+   */
+  deep: boolean;
+}
+
+/**
  * Represents the internal runtime configuration for the vision system.
  * This state is initialized via `vision.init()` and governs the behavior
  * of context logging and data exporting throughout the application.
@@ -127,4 +150,9 @@ export interface VisionRuntimeState {
    * Exporters receive the full context and can forward it to any external system.
    */
   exporters: ReadonlyArray<VisionExporter>;
+
+  /**
+   * Configuration for key normalization applied before exporters are called.
+   */
+  normalization: NormalizationConfig;
 }
