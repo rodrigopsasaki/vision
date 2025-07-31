@@ -1,0 +1,73 @@
+{
+  "name": "@rodrigopsasaki/vision-typeorm",
+  "type": "module",
+  "version": "0.1.0",
+  "description": "TypeORM integration for seamless Vision database operation observability",
+  "license": "MIT",
+  "author": "Rodrigo Sasaki",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rodrigopsasaki/vision.git",
+    "directory": "packages/integrations/data/vision-typeorm"
+  },
+  "bugs": {
+    "url": "https://github.com/rodrigopsasaki/vision/issues"
+  },
+  "homepage": "https://github.com/rodrigopsasaki/vision/tree/main/packages/vision-typeorm#readme",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --config ../../.prettierrc --ignore-path ../../.prettierignore --write .",
+    "format:check": "prettier --config ../../.prettierrc --ignore-path ../../.prettierignore --check .",
+    "spellcheck": "cspell '**/*.{ts,md,json}'",
+    "build": "tsup src/index.ts --format esm --dts --out-dir dist",
+    "dev": "tsup src/index.ts --format esm --dts --watch",
+    "test": "vitest run",
+    "test:dev": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "vision",
+    "typeorm",
+    "database",
+    "orm",
+    "observability",
+    "structured-logging",
+    "context",
+    "typescript",
+    "nodejs"
+  ],
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.36.0",
+    "@typescript-eslint/parser": "^8.36.0",
+    "@vitest/coverage-v8": "^3.2.4",
+    "cspell": "^9.1.5",
+    "eslint": "^9.31.0",
+    "eslint-plugin-import": "^2.32.0",
+    "prettier": "^3.6.2",
+    "sqlite3": "^5.1.6",
+    "tsup": "^8.5.0",
+    "typeorm": "^0.3.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  },
+  "peerDependencies": {
+    "@rodrigopsasaki/vision": "^0.3.0",
+    "typeorm": "^0.3.0"
+  }
+}
