@@ -1,7 +1,7 @@
 {
   "name": "@rodrigopsasaki/vision-nestjs",
   "type": "module",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "description": "Advanced NestJS integration for Vision observability with decorators, guards, and dynamic modules",
   "license": "MIT",
   "author": "Rodrigo Sasaki",
