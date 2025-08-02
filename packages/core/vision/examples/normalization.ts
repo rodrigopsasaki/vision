@@ -84,7 +84,7 @@ function runExample() {
 
     vision.merge("orderMetadata", {
       orderId: "order-789",
-      customerId: "cust-456",
+      customerId: "customer-456",
       orderDate: new Date().toISOString(),
       shippingAddress: {
         streetName: "Oak Avenue",

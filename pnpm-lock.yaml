@@ -143,14 +143,13 @@ importers:
         version: 3.2.4(@types/node@20.19.7)(tsx@4.20.3)
 
   packages/integrations/data/vision-prisma:
-    dependencies:
-      '@rodrigopsasaki/vision':
-        specifier: ^0.3.0
-        version: link:../../../core/vision
     devDependencies:
       '@prisma/client':
         specifier: ^5.0.0
         version: 5.22.0(prisma@5.22.0)
+      '@rodrigopsasaki/vision':
+        specifier: workspace:*
+        version: link:../../../core/vision
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.7
@@ -217,6 +216,9 @@ importers:
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
+      reflect-metadata:
+        specifier: ^0.1.14
+        version: 0.1.14
       sqlite3:
         specifier: ^5.1.6
         version: 5.1.7

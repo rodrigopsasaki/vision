@@ -128,8 +128,8 @@ export function createOperationName(
     parts.push(entity.toLowerCase());
   }
 
-  const category = categorizeMethod(method);
-  parts.push(category);
+  // Use the actual method name instead of category for more specific naming
+  parts.push(method);
 
   return parts.join(".");
 }

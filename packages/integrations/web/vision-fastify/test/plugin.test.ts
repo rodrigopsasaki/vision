@@ -24,7 +24,7 @@ describe("Vision Fastify Plugin", () => {
     });
 
     test("plugin has correct fastify plugin properties", () => {
-      expect(visionPlugin[Symbol.for("fastify.display-name")]).toBe("vision-plugin");
+      expect(visionPlugin[Symbol.for("fastify.display-name")]).toBe("vision");
       expect(visionPlugin[Symbol.for("skip-override")]).toBe(true);
     });
 
@@ -42,7 +42,7 @@ describe("Vision Fastify Plugin", () => {
 
     test("minimal plugin has correct properties", () => {
       const plugin = createMinimalVisionPlugin();
-      expect(plugin[Symbol.for("fastify.display-name")]).toBe("vision-minimal-plugin");
+      expect(plugin[Symbol.for("fastify.display-name")]).toBe("vision-minimal");
     });
   });
 });

@@ -29,26 +29,26 @@ describe("Vision Prisma Instrumentation", () => {
   describe("instrumentPrisma", () => {
     test("function exists and is callable", () => {
       expect(typeof instrumentPrisma).toBe("function");
-      expect(instrumentPrisma.length).toBe(2); // client, config
+      expect(instrumentPrisma.length).toBe(1); // client
     });
 
     test("handles client without $on method gracefully", () => {
       const invalidClient = {};
       const result = instrumentPrisma(invalidClient as any);
-      expect(result).toBe(invalidClient);
+      expect(result).toStrictEqual(invalidClient);
     });
   });
 
   describe("instrumentPrismaWithQueryLogging", () => {
     test("function exists and is callable", () => {
       expect(typeof instrumentPrismaWithQueryLogging).toBe("function");
-      expect(instrumentPrismaWithQueryLogging.length).toBe(2); // client, options
+      expect(instrumentPrismaWithQueryLogging.length).toBe(1); // client
     });
 
     test("returns the passed client", () => {
       const invalidClient = {};
       const result = instrumentPrismaWithQueryLogging(invalidClient as any);
-      expect(result).toBe(invalidClient);
+      expect(result).toStrictEqual(invalidClient);
     });
   });
 });

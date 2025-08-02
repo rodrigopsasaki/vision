@@ -23,13 +23,13 @@ export function VisionInstrumented(config: VisionTypeOrmConfig = {}) {
 
         // Instrument all prototype methods
         const proto = Object.getPrototypeOf(this);
-        const methodNames = Object.getOwnPropertyNames(proto).filter(
+        const methodNames = Object.getOwnPropertyNames(constructor.prototype).filter(
           (name) =>
-            name !== "constructor" && typeof proto[name] === "function" && !name.startsWith("_"),
+            name !== "constructor" && typeof constructor.prototype[name] === "function" && !name.startsWith("_"),
         );
 
         methodNames.forEach((methodName) => {
-          const originalMethod = proto[methodName];
+          const originalMethod = constructor.prototype[methodName];
           proto[methodName] = instrumentMethod(originalMethod, methodName, entityName, finalConfig);
         });
       }

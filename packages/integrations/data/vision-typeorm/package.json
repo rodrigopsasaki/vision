@@ -61,6 +61,7 @@
     "eslint": "^9.31.0",
     "eslint-plugin-import": "^2.32.0",
     "prettier": "^3.6.2",
+    "reflect-metadata": "^0.1.14",
     "sqlite3": "^5.1.6",
     "tsup": "^8.5.0",
     "typeorm": "^0.3.0",

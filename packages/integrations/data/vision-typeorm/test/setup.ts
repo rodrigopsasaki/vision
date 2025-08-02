@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import { DataSource, Entity, PrimaryGeneratedColumn, Column, Repository } from "typeorm";
 
 // Test entity for our tests
@@ -6,13 +7,13 @@ export class TestUser {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column()
+  @Column("varchar")
   name!: string;
 
-  @Column()
+  @Column("varchar")
   email!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: "varchar", nullable: true })
   password?: string;
 }
 
@@ -21,13 +22,13 @@ export class TestPost {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column()
+  @Column("varchar")
   title!: string;
 
-  @Column()
+  @Column("text")
   content!: string;
 
-  @Column()
+  @Column("int")
   userId!: number;
 }
 
@@ -75,16 +76,36 @@ export class MockVisionContext {
     }
   }
 
-  observe(name: string, fn: () => Promise<unknown>): Promise<unknown> {
+  async observe(name: string, fn: () => Promise<unknown>): Promise<unknown> {
     const beforeData = new Map(this.data);
 
-    return fn().then((result) => {
+    try {
+      const result = await fn();
+      
+      // Create a snapshot of the current data for this observe call
+      const observeData = new Map(this.data);
+      
+      // Restore the previous data state to isolate contexts
+      this.data = beforeData;
+      
       this.observeCalls.push({
         name,
-        data: new Map(this.data),
+        data: observeData,
       });
       return result;
-    });
+    } catch (error) {
+      // Create a snapshot of the current data for this observe call
+      const observeData = new Map(this.data);
+      
+      // Restore the previous data state to isolate contexts
+      this.data = beforeData;
+      
+      this.observeCalls.push({
+        name,
+        data: observeData,
+      });
+      throw error;
+    }
   }
 
   context(): Map<string, unknown> {

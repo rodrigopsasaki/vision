@@ -3,6 +3,7 @@ import { DataSource, EntityManager, QueryRunner } from "typeorm";
 
 import type { VisionTypeOrmConfig, TypeOrmTransactionMeta } from "./types";
 import { DEFAULT_CONFIG, extractErrorDetails } from "./utils";
+import { instrumentRepository } from "./instrumentTypeOrm";
 
 // TypeORM 0.3 isolation levels as string union
 type IsolationLevel = "READ UNCOMMITTED" | "READ COMMITTED" | "REPEATABLE READ" | "SERIALIZABLE";
@@ -203,6 +204,14 @@ function createTransactionManagerProxy(
         method === "constructor"
       ) {
         return originalMethod;
+      }
+
+      // Handle getRepository to return instrumented repositories
+      if (method === "getRepository") {
+        return function (...args: unknown[]) {
+          const repository = (originalMethod as Function).apply(target, args);
+          return instrumentRepository(repository, config);
+        };
       }
 
       // Track query operations
