@@ -143,13 +143,14 @@ importers:
         version: 3.2.4(@types/node@20.19.7)(tsx@4.20.3)
 
   packages/integrations/data/vision-prisma:
+    dependencies:
+      '@rodrigopsasaki/vision':
+        specifier: ^0.3.0
+        version: link:../../../core/vision
     devDependencies:
       '@prisma/client':
         specifier: ^5.0.0
         version: 5.22.0(prisma@5.22.0)
-      '@rodrigopsasaki/vision':
-        specifier: workspace:*
-        version: link:../../../core/vision
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.7
