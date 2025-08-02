@@ -1,7 +1,7 @@
 {
   "name": "@rodrigopsasaki/vision-typeorm",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "TypeORM integration for seamless Vision database operation observability",
   "license": "MIT",
   "author": "Rodrigo Sasaki",
