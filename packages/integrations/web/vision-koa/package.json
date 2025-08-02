@@ -1,7 +1,7 @@
 {
   "name": "@rodrigopsasaki/vision-koa",
   "type": "module",
-  "version": "0.4.0",
+  "version": "0.3.0",
   "description": "Elegant Koa middleware for seamless Vision context integration",
   "license": "MIT",
   "author": "Rodrigo Sasaki",
@@ -77,7 +77,7 @@
     "micromatch": "^4.0.8"
   },
   "peerDependencies": {
-    "@rodrigopsasaki/vision": "^0.4.0",
+    "@rodrigopsasaki/vision": "0.3.0",
     "koa": "^2.0.0"
   }
 }

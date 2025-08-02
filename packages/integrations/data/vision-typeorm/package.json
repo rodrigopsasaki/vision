@@ -1,7 +1,7 @@
 {
   "name": "@rodrigopsasaki/vision-typeorm",
   "type": "module",
-  "version": "0.4.0",
+  "version": "0.3.0",
   "description": "TypeORM integration for seamless Vision database operation observability",
   "license": "MIT",
   "author": "Rodrigo Sasaki",
@@ -69,7 +69,7 @@
     "vitest": "^3.2.4"
   },
   "peerDependencies": {
-    "@rodrigopsasaki/vision": "^0.4.0",
+    "@rodrigopsasaki/vision": "0.3.0",
     "typeorm": "^0.3.0"
   }
 }

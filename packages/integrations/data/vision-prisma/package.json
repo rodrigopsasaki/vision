@@ -1,7 +1,7 @@
 {
   "name": "@rodrigopsasaki/vision-prisma",
   "type": "module",
-  "version": "0.4.0",
+  "version": "0.3.0",
   "description": "Prisma integration for seamless Vision database operation observability",
   "license": "MIT",
   "author": "Rodrigo Sasaki",
@@ -68,7 +68,7 @@
     "vitest": "^3.2.4"
   },
   "peerDependencies": {
-    "@rodrigopsasaki/vision": "^0.4.0",
+    "@rodrigopsasaki/vision": "0.3.0",
     "@prisma/client": "^5.0.0 || ^4.0.0"
   }
 }
