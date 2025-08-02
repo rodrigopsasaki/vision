@@ -59,7 +59,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     needs: ci
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -88,18 +88,23 @@ jobs:
 
       - name: Version packages and create changelog
         run: |
-          if [ "${{ github.event.inputs.dryRun }}" = "true" ]; then
+          DRY_RUN="${{ github.event.inputs.dryRun || 'false' }}"
+          if [ "$DRY_RUN" = "true" ]; then
             npx nx release version --dry-run
             npx nx release changelog --dry-run
           else
-            npx nx release version
-            npx nx release changelog
+            VERSION=$(npx nx release version --verbose 2>&1 | grep -o "New version: [0-9]\+\.[0-9]\+\.[0-9]\+" | cut -d' ' -f3 | head -1)
+            if [ -n "$VERSION" ]; then
+              npx nx release changelog $VERSION
+            else
+              npx nx release changelog
+            fi
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish packages
-        if: github.event.inputs.dryRun != 'true'
+        if: ${{ (github.event.inputs.dryRun || 'false') != 'true' }}
         run: npx nx release publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
