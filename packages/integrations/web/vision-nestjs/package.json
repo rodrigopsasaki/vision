@@ -55,6 +55,7 @@
     "websocket"
   ],
   "devDependencies": {
+    "@rodrigopsasaki/vision": "workspace:*",
     "@nestjs/testing": "^10.0.0",
     "@types/node": "^20.0.0",
     "@types/supertest": "^6.0.2",
