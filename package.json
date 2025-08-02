@@ -25,9 +25,17 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,md,json}\"",
     "clean": "nx reset",
     "typecheck": "nx run-many -t typecheck",
-    "spellcheck": "nx run-many -t spellcheck"
+    "spellcheck": "nx run-many -t spellcheck",
+    "release": "nx release",
+    "release:version": "nx release version",
+    "release:changelog": "nx release changelog", 
+    "release:publish": "nx release publish",
+    "release:dry-run": "nx release --dry-run"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@nx/js": "^21.3.11",
     "@nx/workspace": "^21.3.11",
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^8.36.0",
