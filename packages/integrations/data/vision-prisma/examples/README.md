@@ -13,12 +13,14 @@ This directory contains comprehensive examples demonstrating how to use `@rodrig
 ### Setup
 
 1. Create a new project directory:
+
 ```bash
 mkdir vision-prisma-demo
 cd vision-prisma-demo
 ```
 
 2. Initialize your project:
+
 ```bash
 npm init -y
 npm install @prisma/client @rodrigopsasaki/vision @rodrigopsasaki/vision-prisma
@@ -28,21 +30,25 @@ npm install -D prisma typescript @types/node tsx
 3. Copy the `schema.prisma` file from this examples directory
 
 4. Initialize Prisma:
+
 ```bash
 npx prisma init
 ```
 
 5. Update your `.env` file with your database connection:
+
 ```env
 DATABASE_URL="postgresql://user:password@localhost:5432/vision_demo"
 ```
 
 6. Push the schema to your database:
+
 ```bash
 npx prisma db push
 ```
 
 7. Generate Prisma Client:
+
 ```bash
 npx prisma generate
 ```
@@ -52,6 +58,7 @@ npx prisma generate
 ### 1. Basic Usage (`basic-usage.ts`)
 
 The simplest way to get started with Vision Prisma. Shows:
+
 - Basic instrumentation setup
 - Automatic operation tracking
 - Simple queries and mutations
@@ -59,6 +66,7 @@ The simplest way to get started with Vision Prisma. Shows:
 - Error capture
 
 Run it:
+
 ```bash
 npx tsx basic-usage.ts
 ```
@@ -66,6 +74,7 @@ npx tsx basic-usage.ts
 ### 2. Advanced Usage (`advanced-usage.ts`)
 
 Full-featured example with Express integration. Demonstrates:
+
 - Complete REST API with Vision tracking
 - Complex queries with relations
 - Pagination and filtering
@@ -75,17 +84,20 @@ Full-featured example with Express integration. Demonstrates:
 - Query event logging
 
 Install additional dependencies:
+
 ```bash
 npm install express @rodrigopsasaki/vision-express
 npm install -D @types/express
 ```
 
 Run it:
+
 ```bash
 npx tsx advanced-usage.ts
 ```
 
 Then try the API:
+
 ```bash
 # Get all users
 curl http://localhost:3000/api/users
@@ -105,6 +117,7 @@ curl http://localhost:3000/api/stats
 ### 3. Performance Optimized (`performance-optimized.ts`)
 
 Best practices for production use:
+
 - Minimal logging configuration
 - Batched metrics export
 - Query optimization techniques
@@ -114,6 +127,7 @@ Best practices for production use:
 - Index usage patterns
 
 Run it:
+
 ```bash
 npx tsx performance-optimized.ts
 ```
@@ -121,6 +135,7 @@ npx tsx performance-optimized.ts
 ### 4. Microservice Example (`microservice-example.ts`)
 
 Distributed systems patterns:
+
 - Service metadata injection
 - Distributed tracing propagation
 - Structured JSON logging
@@ -130,12 +145,14 @@ Distributed systems patterns:
 - Graceful shutdown
 
 Run it:
+
 ```bash
 # Run with environment variables
 SERVICE_NAME=user-service SERVICE_VERSION=1.2.0 npx tsx microservice-example.ts
 ```
 
 Test distributed tracing:
+
 ```bash
 # Send request with trace headers
 curl http://localhost:3001/users/1 \
@@ -151,44 +168,46 @@ Vision Prisma provides extensive configuration:
 ```typescript
 const config: VisionPrismaConfig = {
   // Core settings
-  enabled: true,              // Enable/disable instrumentation
-  operationPrefix: "db",      // Prefix for operation names
-  
+  enabled: true, // Enable/disable instrumentation
+  operationPrefix: "db", // Prefix for operation names
+
   // Logging control
-  logParams: false,           // Log query parameters (careful with PII!)
-  logQuery: true,             // Log SQL queries
-  logResultCount: true,       // Log result array counts
-  logConnectionInfo: false,   // Log connection details
-  
+  logParams: false, // Log query parameters (careful with PII!)
+  logQuery: true, // Log SQL queries
+  logResultCount: true, // Log result array counts
+  logConnectionInfo: false, // Log connection details
+
   // Performance
-  maxQueryLength: 1000,       // Truncate long queries
-  
+  maxQueryLength: 1000, // Truncate long queries
+
   // Security
-  redactFields: [             // Fields to redact from params
+  redactFields: [
+    // Fields to redact from params
     "password",
     "token",
     "secret",
-    "apiKey"
+    "apiKey",
   ],
-  
+
   // Naming
-  includeModelInName: true    // Include model in operation name
+  includeModelInName: true, // Include model in operation name
 };
 ```
 
 ## 🏗️ Architecture Patterns
 
 ### Layered Architecture
+
 ```typescript
 // Repository layer with Vision
 class UserRepository {
   constructor(private prisma: PrismaClient) {}
-  
+
   async findById(id: number) {
     return vision.observe("repo.user.findById", async () => {
       vision.set("user_id", id);
-      return this.prisma.user.findUnique({ 
-        where: { id } 
+      return this.prisma.user.findUnique({
+        where: { id },
       });
     });
   }
@@ -196,6 +215,7 @@ class UserRepository {
 ```
 
 ### Service Layer
+
 ```typescript
 // Service layer adds business context
 class UserService {
@@ -210,6 +230,7 @@ class UserService {
 ```
 
 ### API Layer
+
 ```typescript
 // API layer tracks HTTP context
 app.get("/users/:id", async (req, res) => {
@@ -246,11 +267,13 @@ app.get("/users/:id", async (req, res) => {
 ## 🔍 Debugging
 
 Enable debug logging:
+
 ```bash
 DEBUG=prisma:* npx tsx your-script.ts
 ```
 
 Check Vision context:
+
 ```typescript
 const ctx = vision.context();
 console.log("Current context:", ctx);

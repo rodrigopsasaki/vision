@@ -35,7 +35,7 @@ export class UsersService {
     try {
       // Simulate slow database query
       await new Promise((resolve) => setTimeout(resolve, 100));
-      
+
       const users = [
         { id: 1, name: "John Doe", email: "john@example.com" },
         { id: 2, name: "Jane Smith", email: "jane@example.com" },
@@ -54,7 +54,7 @@ export class UsersService {
         duration_ms: Date.now() - startTime,
         success: true,
       });
-      
+
       return users;
     } catch (error) {
       vision.push("performance", {
@@ -93,7 +93,7 @@ export class UsersService {
       });
 
       const user = { id: parseInt(id), name: "John Doe", email: "john@example.com" };
-      
+
       // Track successful retrieval
       vision.push("events", {
         event: "user_retrieved",
@@ -202,7 +202,8 @@ export class UsersController {
   }
 
   @Post()
-  @VisionSecurity({ // Security-focused tracking
+  @VisionSecurity({
+    // Security-focused tracking
     captureFailures: true,
     captureUserAgent: true,
     captureIpAddress: true,
@@ -246,11 +247,13 @@ export class HealthController {
       extractUser: (context) => {
         try {
           const request = context.switchToHttp().getRequest();
-          return request.user ? {
-            id: request.user.id || request.user.sub,
-            email: request.user.email,
-            roles: request.user.roles || [],
-          } : undefined;
+          return request.user
+            ? {
+                id: request.user.id || request.user.sub,
+                email: request.user.email,
+                roles: request.user.roles || [],
+              }
+            : undefined;
         } catch {
           return undefined;
         }
@@ -306,12 +309,12 @@ async function bootstrap() {
   });
 
   const app = await NestFactory.create(AppModule);
-  
+
   // Enable CORS for demo
   app.enableCors();
-  
+
   await app.listen(3000);
-  
+
   console.log("🚀 Application started on http://localhost:3000");
   console.log("📝 Try these endpoints:");
   console.log("  GET  /users       - List users (with performance tracking)");

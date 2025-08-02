@@ -14,12 +14,7 @@ export {
 } from "./transactions";
 
 // Decorators for advanced usage
-export {
-  VisionInstrumented,
-  VisionObserve,
-  VisionParam,
-  VisionEntity,
-} from "./decorators";
+export { VisionInstrumented, VisionObserve, VisionParam, VisionEntity } from "./decorators";
 
 // Types and configuration
 export type {

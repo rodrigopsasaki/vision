@@ -23,6 +23,7 @@ npm install @rodrigopsasaki/vision-typeorm
 ```
 
 **Peer Dependencies:**
+
 - `@rodrigopsasaki/vision`: ^0.3.0
 - `typeorm`: ^0.3.0
 
@@ -53,18 +54,19 @@ const instrumentedDataSource = instrumentDataSource(dataSource);
 // 3. Use normally - all operations are automatically observed
 await vision.observe("user.create", async () => {
   const userRepository = instrumentedDataSource.getRepository(User);
-  
+
   const user = await userRepository.save({
     name: "John Doe",
     email: "john@example.com",
   });
-  
+
   vision.set("user_id", user.id);
   return user;
 });
 ```
 
 **Output:**
+
 ```json
 {
   "name": "user.create",
@@ -125,10 +127,10 @@ import { visionTransaction } from "@rodrigopsasaki/vision-typeorm";
 const result = await visionTransaction(dataSource, async (manager) => {
   const userRepository = manager.getRepository(User);
   const user = await userRepository.save(userData);
-  
+
   const postRepository = manager.getRepository(Post);
   const post = await postRepository.save({ ...postData, userId: user.id });
-  
+
   return { user, post };
 });
 ```
@@ -139,23 +141,23 @@ const result = await visionTransaction(dataSource, async (manager) => {
 interface VisionTypeOrmConfig {
   // Core settings
   enabled?: boolean; // Default: true
-  
+
   // Logging control
   logParams?: boolean; // Default: false (security)
   logQuery?: boolean; // Default: true
   logResultCount?: boolean; // Default: true
   logConnectionInfo?: boolean; // Default: false
-  
+
   // Performance settings
   maxQueryLength?: number; // Default: 1000
-  
+
   // Operation naming
   includeEntityInName?: boolean; // Default: true
   operationPrefix?: string; // Default: "db"
-  
+
   // Security
   redactFields?: string[]; // Default: ["password", "token", "secret", "key", "hash"]
-  
+
   // Selective instrumentation
   instrumentTransactions?: boolean; // Default: true
   instrumentRepositories?: boolean; // Default: true
@@ -193,22 +195,18 @@ class UserService {
 ```typescript
 import { visionTransactionWithIsolation } from "@rodrigopsasaki/vision-typeorm";
 
-await visionTransactionWithIsolation(
-  dataSource,
-  "SERIALIZABLE",
-  async (manager) => {
-    // Critical operations requiring serializable isolation
-    const account = await manager.getRepository(Account).findOne({
-      where: { id: accountId },
-      lock: { mode: "pessimistic_write" }
-    });
-    
-    account.balance -= withdrawAmount;
-    await manager.getRepository(Account).save(account);
-    
-    return account;
-  }
-);
+await visionTransactionWithIsolation(dataSource, "SERIALIZABLE", async (manager) => {
+  // Critical operations requiring serializable isolation
+  const account = await manager.getRepository(Account).findOne({
+    where: { id: accountId },
+    lock: { mode: "pessimistic_write" },
+  });
+
+  account.balance -= withdrawAmount;
+  await manager.getRepository(Account).save(account);
+
+  return account;
+});
 ```
 
 ### Manual QueryRunner Management
@@ -219,13 +217,13 @@ import { visionQueryRunner } from "@rodrigopsasaki/vision-typeorm";
 await visionQueryRunner(dataSource, async (queryRunner) => {
   await queryRunner.connect();
   await queryRunner.startTransaction();
-  
+
   try {
     const result = await queryRunner.query(
       "INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id",
-      ["John Doe", "john@example.com"]
+      ["John Doe", "john@example.com"],
     );
-    
+
     await queryRunner.commitTransaction();
     return result;
   } catch (error) {
@@ -371,10 +369,10 @@ vision.init({
 Full TypeScript support with enhanced types:
 
 ```typescript
-import type { 
-  VisionDataSource, 
-  VisionRepository, 
-  VisionTypeOrmConfig 
+import type {
+  VisionDataSource,
+  VisionRepository,
+  VisionTypeOrmConfig,
 } from "@rodrigopsasaki/vision-typeorm";
 
 // Enhanced types provide full IntelliSense support
@@ -393,15 +391,18 @@ const repository: VisionRepository<User> = instrumentRepository(userRepository);
 ## Troubleshooting
 
 ### Performance Impact
+
 - Disable `logParams` and `logQuery` for high-frequency operations
 - Use shorter `maxQueryLength` values
 - Consider selective instrumentation
 
 ### Memory Usage
+
 - Set appropriate `maxQueryLength` limits
 - Disable unused instrumentation features
 
 ### TypeScript Issues
+
 - Ensure TypeORM peer dependency version compatibility
 - Use proper type imports from the package
 

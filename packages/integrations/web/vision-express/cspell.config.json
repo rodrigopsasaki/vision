@@ -2,16 +2,29 @@
   "version": "0.2",
   "language": "en",
   "words": [
+    "cust",
     "datadog",
+    "entitymanager",
     "express",
+    "Millis",
     "middleware",
     "observability",
+    "pgbouncer",
+    "queryrunner",
     "redact",
     "redacted",
     "redaction",
+    "Rodrigo",
     "rodrigopsasaki",
+    "Sasaki",
+    "sess",
+    "signup",
     "supertest",
+    "testpost",
+    "testuser",
     "tsup",
+    "typebox",
+    "userservice",
     "vitest",
     "vision"
   ],
@@ -33,4 +46,4 @@
       "description": "Markdown code blocks"
     }
   ]
-} 
+}

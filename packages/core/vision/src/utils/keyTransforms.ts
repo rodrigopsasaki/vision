@@ -5,11 +5,11 @@ export type CasingStyle = "camelCase" | "snake_case" | "kebab-case" | "PascalCas
 
 /**
  * Transforms a string key to the specified casing style.
- * 
+ *
  * @param key - The key to transform
  * @param style - The target casing style
  * @returns The transformed key
- * 
+ *
  * @example
  * ```typescript
  * transformKey("userId", "snake_case"); // "user_id"
@@ -24,20 +24,20 @@ export function transformKey(key: string, style: CasingStyle): string {
 
   // First, split the key into words
   const words = splitIntoWords(key);
-  
+
   switch (style) {
     case "camelCase":
       return words[0].toLowerCase() + words.slice(1).map(capitalize).join("");
-    
+
     case "snake_case":
-      return words.map(word => word.toLowerCase()).join("_");
-    
+      return words.map((word) => word.toLowerCase()).join("_");
+
     case "kebab-case":
-      return words.map(word => word.toLowerCase()).join("-");
-    
+      return words.map((word) => word.toLowerCase()).join("-");
+
     case "PascalCase":
       return words.map(capitalize).join("");
-    
+
     default:
       return key;
   }
@@ -45,10 +45,10 @@ export function transformKey(key: string, style: CasingStyle): string {
 
 /**
  * Splits a string into words, handling various separators and casing patterns.
- * 
+ *
  * @param str - The string to split
  * @returns Array of words
- * 
+ *
  * @example
  * ```typescript
  * splitIntoWords("userId"); // ["user", "Id"]
@@ -65,29 +65,29 @@ function splitIntoWords(str: string): string[] {
 
   // Split on common delimiters first
   const parts = str.split(/[-_\s]+/).filter(Boolean);
-  
+
   // Further split camelCase/PascalCase within each part
   const words: string[] = [];
-  
+
   for (const part of parts) {
     if (!part) continue;
-    
+
     // Split on camelCase/PascalCase boundaries
     const camelCaseSplit = part.split(/(?=[A-Z])/).filter(Boolean);
-    
+
     for (const word of camelCaseSplit) {
       if (word) {
         words.push(word);
       }
     }
   }
-  
+
   return words.length > 0 ? words : [str];
 }
 
 /**
  * Capitalizes the first letter of a word.
- * 
+ *
  * @param word - The word to capitalize
  * @returns The capitalized word
  */
@@ -98,12 +98,12 @@ function capitalize(word: string): string {
 
 /**
  * Transforms all keys in an object recursively to the specified casing style.
- * 
+ *
  * @param obj - The object to transform
  * @param style - The target casing style
  * @param visited - Set to track visited objects to prevent infinite recursion
  * @returns A new object with transformed keys
- * 
+ *
  * @example
  * ```typescript
  * const input = {
@@ -114,7 +114,7 @@ function capitalize(word: string): string {
  *   },
  *   eventList: ["login", "logout"]
  * };
- * 
+ *
  * transformObjectKeys(input, "snake_case");
  * // {
  * //   user_id: "123",
@@ -126,7 +126,11 @@ function capitalize(word: string): string {
  * // }
  * ```
  */
-export function transformObjectKeys(obj: unknown, style: CasingStyle, visited = new WeakSet()): unknown {
+export function transformObjectKeys(
+  obj: unknown,
+  style: CasingStyle,
+  visited = new WeakSet(),
+): unknown {
   if (style === "none") {
     return obj;
   }
@@ -142,7 +146,7 @@ export function transformObjectKeys(obj: unknown, style: CasingStyle, visited = 
 
   if (Array.isArray(obj)) {
     visited.add(obj);
-    const transformed = obj.map(item => transformObjectKeys(item, style, visited));
+    const transformed = obj.map((item) => transformObjectKeys(item, style, visited));
     visited.delete(obj);
     return transformed;
   }
@@ -150,12 +154,12 @@ export function transformObjectKeys(obj: unknown, style: CasingStyle, visited = 
   if (typeof obj === "object" && obj.constructor === Object) {
     visited.add(obj);
     const transformed: Record<string, unknown> = {};
-    
+
     for (const [key, value] of Object.entries(obj)) {
       const transformedKey = transformKey(key, style);
       transformed[transformedKey] = transformObjectKeys(value, style, visited);
     }
-    
+
     visited.delete(obj);
     return transformed;
   }
@@ -166,35 +170,38 @@ export function transformObjectKeys(obj: unknown, style: CasingStyle, visited = 
 
 /**
  * Transforms a Map's keys to the specified casing style.
- * 
+ *
  * @param map - The Map to transform
  * @param style - The target casing style
  * @returns A new Map with transformed keys
- * 
+ *
  * @example
  * ```typescript
  * const input = new Map([
  *   ["userId", "123"],
  *   ["firstName", "John"]
  * ]);
- * 
+ *
  * const result = transformMapKeys(input, "snake_case");
  * // Map([["user_id", "123"], ["first_name", "John"]])
  * ```
  */
-export function transformMapKeys(map: Map<string, unknown>, style: CasingStyle): Map<string, unknown> {
+export function transformMapKeys(
+  map: Map<string, unknown>,
+  style: CasingStyle,
+): Map<string, unknown> {
   if (style === "none") {
     return map;
   }
 
   const transformed = new Map<string, unknown>();
   const visited = new WeakSet();
-  
+
   for (const [key, value] of map.entries()) {
     const transformedKey = transformKey(key, style);
     const transformedValue = transformObjectKeys(value, style, visited);
     transformed.set(transformedKey, transformedValue);
   }
-  
+
   return transformed;
 }

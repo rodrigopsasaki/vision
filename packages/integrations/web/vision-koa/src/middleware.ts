@@ -1,11 +1,7 @@
 import { vision } from "@rodrigopsasaki/vision";
 import type { Context, Next } from "koa";
 
-import type {
-  VisionKoaOptions,
-  VisionKoaMiddleware,
-  VisionKoaContext,
-} from "./types";
+import type { VisionKoaOptions, VisionKoaMiddleware, VisionKoaContext } from "./types";
 import { DEFAULT_VISION_KOA_OPTIONS } from "./types";
 import {
   extractRequestMetadata,
@@ -19,39 +15,39 @@ import {
 
 /**
  * Creates a Vision Koa middleware that automatically creates contexts for HTTP requests.
- * 
+ *
  * This middleware wraps each request in a Vision context, automatically capturing
  * request/response metadata and providing easy access to the context throughout
  * the request lifecycle.
- * 
+ *
  * @param options - Configuration options for the middleware
  * @returns Koa middleware function
- * 
+ *
  * @example
  * ```typescript
  * import Koa from 'koa';
  * import { createVisionMiddleware } from '@rodrigopsasaki/vision-koa';
- * 
+ *
  * const app = new Koa();
- * 
+ *
  * // Basic usage - just works out of the box
  * app.use(createVisionMiddleware());
- * 
+ *
  * // Advanced usage with custom options
  * app.use(createVisionMiddleware({
  *   captureBody: true,
  *   excludeRoutes: ["/health", "/metrics"],
  *   extractUser: (ctx) => ctx.state.user,
  * }));
- * 
+ *
  * app.use(async (ctx, next) => {
  *   // Access the Vision context
  *   const visionContext = ctx.visionContext;
- *   
+ *
  *   // Add custom data to the context
  *   vision.set('user_id', ctx.params?.id);
  *   vision.set('operation', 'get_user');
- *   
+ *
  *   // Your route logic here...
  *   ctx.body = { message: 'Hello World' };
  * });
@@ -62,7 +58,11 @@ export function createVisionMiddleware(options: VisionKoaOptions = {}): VisionKo
 
   return async (ctx: Context, next: Next) => {
     // Skip if disabled or excluded route
-    if (!config.enabled || config.shouldExcludeRoute(ctx) || isRouteExcluded(ctx.path, config.excludeRoutes)) {
+    if (
+      !config.enabled ||
+      config.shouldExcludeRoute(ctx) ||
+      isRouteExcluded(ctx.path, config.excludeRoutes)
+    ) {
       return await next();
     }
 
@@ -86,8 +86,8 @@ export function createVisionMiddleware(options: VisionKoaOptions = {}): VisionKo
         url: ctx.url,
         path: ctx.path,
         ...(correlationId && { correlation_id: correlationId }),
-        ...(user && typeof user === 'object' ? { user } : {}),
-        ...(additionalMetadata && typeof additionalMetadata === 'object' ? additionalMetadata : {}),
+        ...(user && typeof user === "object" ? { user } : {}),
+        ...(additionalMetadata && typeof additionalMetadata === "object" ? additionalMetadata : {}),
       },
     };
 
@@ -95,7 +95,7 @@ export function createVisionMiddleware(options: VisionKoaOptions = {}): VisionKo
     return vision.observe(contextConfig, async () => {
       try {
         const visionContext = vision.context();
-        
+
         // Attach context to Koa context
         (ctx as VisionKoaContext).visionContext = visionContext;
 
@@ -240,7 +240,9 @@ async function handleRequestError(
 /**
  * Creates a minimal Vision middleware with basic functionality.
  */
-export function createMinimalVisionMiddleware(options: Partial<VisionKoaOptions> = {}): VisionKoaMiddleware {
+export function createMinimalVisionMiddleware(
+  options: Partial<VisionKoaOptions> = {},
+): VisionKoaMiddleware {
   const minimalOptions: VisionKoaOptions = {
     ...options,
     captureHeaders: options.captureHeaders ?? false,
@@ -262,7 +264,9 @@ export function createMinimalVisionMiddleware(options: Partial<VisionKoaOptions>
 /**
  * Creates a comprehensive Vision middleware with all features enabled.
  */
-export function createComprehensiveVisionMiddleware(options: Partial<VisionKoaOptions> = {}): VisionKoaMiddleware {
+export function createComprehensiveVisionMiddleware(
+  options: Partial<VisionKoaOptions> = {},
+): VisionKoaMiddleware {
   const comprehensiveOptions: VisionKoaOptions = {
     ...options,
     captureHeaders: options.captureHeaders ?? true,
@@ -289,7 +293,9 @@ export function createComprehensiveVisionMiddleware(options: Partial<VisionKoaOp
 /**
  * Creates a performance-optimized Vision middleware.
  */
-export function createPerformanceVisionMiddleware(options: Partial<VisionKoaOptions> = {}): VisionKoaMiddleware {
+export function createPerformanceVisionMiddleware(
+  options: Partial<VisionKoaOptions> = {},
+): VisionKoaMiddleware {
   const performanceOptions: VisionKoaOptions = {
     ...options,
     captureHeaders: options.captureHeaders ?? false,
@@ -312,7 +318,9 @@ export function createPerformanceVisionMiddleware(options: Partial<VisionKoaOpti
 /**
  * Creates a secure Vision middleware with enhanced security features.
  */
-export function createSecureVisionMiddleware(options: Partial<VisionKoaOptions> = {}): VisionKoaMiddleware {
+export function createSecureVisionMiddleware(
+  options: Partial<VisionKoaOptions> = {},
+): VisionKoaMiddleware {
   const secureOptions: VisionKoaOptions = {
     ...options,
     captureHeaders: options.captureHeaders ?? true,
@@ -321,17 +329,17 @@ export function createSecureVisionMiddleware(options: Partial<VisionKoaOptions> 
     captureParams: options.captureParams ?? true,
     redactSensitiveData: true, // Always redact
     redactHeaders: [
-      ...(DEFAULT_VISION_KOA_OPTIONS.redactHeaders),
-      'x-forwarded-for',
-      'x-real-ip',
-      'x-client-ip',
+      ...DEFAULT_VISION_KOA_OPTIONS.redactHeaders,
+      "x-forwarded-for",
+      "x-real-ip",
+      "x-client-ip",
       ...(options.redactHeaders || []),
     ],
     redactQueryParams: [
-      ...(DEFAULT_VISION_KOA_OPTIONS.redactQueryParams),
-      'access_token',
-      'refresh_token',
-      'session_id',
+      ...DEFAULT_VISION_KOA_OPTIONS.redactQueryParams,
+      "access_token",
+      "refresh_token",
+      "session_id",
       ...(options.redactQueryParams || []),
     ],
     errorHandling: {

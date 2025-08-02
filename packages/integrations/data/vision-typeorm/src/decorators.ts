@@ -1,4 +1,5 @@
 import { vision } from "@rodrigopsasaki/vision";
+
 import type { VisionTypeOrmConfig } from "./types";
 import { DEFAULT_CONFIG, createOperationName, extractErrorDetails } from "./utils";
 
@@ -22,15 +23,13 @@ export function VisionInstrumented(config: VisionTypeOrmConfig = {}) {
 
         // Instrument all prototype methods
         const proto = Object.getPrototypeOf(this);
-        const methodNames = Object.getOwnPropertyNames(proto).filter(
-          (name) => 
-            name !== "constructor" && 
-            typeof proto[name] === "function" &&
-            !name.startsWith("_")
+        const methodNames = Object.getOwnPropertyNames(constructor.prototype).filter(
+          (name) =>
+            name !== "constructor" && typeof constructor.prototype[name] === "function" && !name.startsWith("_"),
         );
 
         methodNames.forEach((methodName) => {
-          const originalMethod = proto[methodName];
+          const originalMethod = constructor.prototype[methodName];
           proto[methodName] = instrumentMethod(originalMethod, methodName, entityName, finalConfig);
         });
       }
@@ -44,11 +43,7 @@ export function VisionInstrumented(config: VisionTypeOrmConfig = {}) {
 export function VisionObserve(config: VisionTypeOrmConfig = {}) {
   const finalConfig = { ...DEFAULT_CONFIG, ...config };
 
-  return function (
-    target: any,
-    propertyKey: string,
-    descriptor: PropertyDescriptor
-  ) {
+  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
     if (!finalConfig.enabled || !descriptor.value) {
       return descriptor;
     }
@@ -68,7 +63,7 @@ export function VisionParam(paramName?: string) {
   return function (target: any, propertyKey: string, parameterIndex: number) {
     const existingParamTypes = Reflect.getMetadata("design:paramtypes", target, propertyKey) || [];
     const existingParamNames = Reflect.getMetadata("vision:paramnames", target, propertyKey) || [];
-    
+
     existingParamNames[parameterIndex] = paramName || `param_${parameterIndex}`;
     Reflect.defineMetadata("vision:paramnames", existingParamNames, target, propertyKey);
   };
@@ -81,7 +76,7 @@ function instrumentMethod(
   originalMethod: Function,
   methodName: string,
   entityName: string,
-  config: Required<VisionTypeOrmConfig>
+  config: Required<VisionTypeOrmConfig>,
 ): Function {
   return async function (this: any, ...args: any[]) {
     const operationName = createOperationName(methodName, entityName, config);
@@ -96,7 +91,7 @@ function instrumentMethod(
       // Capture method parameters if enabled
       if (config.logParams && args.length > 0) {
         const paramNames = Reflect.getMetadata("vision:paramnames", this, methodName) || [];
-        
+
         const params: Record<string, any> = {};
         args.forEach((arg, index) => {
           const paramName = paramNames[index] || `param_${index}`;
@@ -163,8 +158,14 @@ export function VisionEntity(config: VisionTypeOrmConfig = {}) {
 
         // Add lifecycle event tracking
         const lifecycleMethods = [
-          "beforeInsert", "afterInsert", "beforeUpdate", "afterUpdate",
-          "beforeRemove", "afterRemove", "beforeLoad", "afterLoad"
+          "beforeInsert",
+          "afterInsert",
+          "beforeUpdate",
+          "afterUpdate",
+          "beforeRemove",
+          "afterRemove",
+          "beforeLoad",
+          "afterLoad",
         ];
 
         lifecycleMethods.forEach((methodName) => {
@@ -172,7 +173,7 @@ export function VisionEntity(config: VisionTypeOrmConfig = {}) {
             const originalMethod = this[methodName as keyof this] as Function;
             (this as any)[methodName] = async function (this: any, ...args: any[]) {
               const operationName = `db.${entityName}.${methodName}`;
-              
+
               return vision.observe(operationName, async () => {
                 vision.set("database.operation", methodName);
                 vision.set("database.target", "typeorm");
@@ -183,7 +184,7 @@ export function VisionEntity(config: VisionTypeOrmConfig = {}) {
 
                 try {
                   const result = await originalMethod.apply(this, args);
-                  
+
                   const duration = Date.now() - startTime;
                   vision.set("database.duration_ms", duration);
                   vision.set("database.success", true);
@@ -193,7 +194,10 @@ export function VisionEntity(config: VisionTypeOrmConfig = {}) {
                   const duration = Date.now() - startTime;
                   vision.set("database.duration_ms", duration);
                   vision.set("database.success", false);
-                  vision.set("database.error", error instanceof Error ? error.message : String(error));
+                  vision.set(
+                    "database.error",
+                    error instanceof Error ? error.message : String(error),
+                  );
 
                   throw error;
                 }

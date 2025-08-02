@@ -1,4 +1,4 @@
-import { vision } from "@rodrigopsasaki/vision";
+import "reflect-metadata";
 import {
   CallHandler,
   ExecutionContext,
@@ -8,6 +8,7 @@ import {
   Optional,
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
+import { vision } from "@rodrigopsasaki/vision";
 import { Observable, throwError } from "rxjs";
 import { catchError, tap } from "rxjs/operators";
 
@@ -35,13 +36,13 @@ import {
 
 /**
  * Advanced Vision interceptor for NestJS applications.
- * 
+ *
  * This interceptor provides comprehensive observability integration across all NestJS execution contexts:
  * - HTTP requests (Express/Fastify)
  * - GraphQL operations
  * - WebSocket events
  * - Microservice messages (TCP, Redis, NATS, etc.)
- * 
+ *
  * Features:
  * - Automatic context creation and propagation
  * - Method-level configuration via decorators
@@ -49,7 +50,7 @@ import {
  * - Security-aware data capture with automatic redaction
  * - Cross-cutting concerns integration (guards, pipes, filters)
  * - Microservice and event-driven architecture support
- * 
+ *
  * @example
  * ```typescript
  * // Global installation
@@ -62,7 +63,7 @@ import {
  *   ],
  * })
  * export class AppModule {}
- * 
+ *
  * // Or with custom configuration
  * @Module({
  *   providers: [
@@ -82,7 +83,7 @@ export class VisionInterceptor implements NestInterceptor {
 
   constructor(
     @Optional() @Inject(VISION_NESTJS_OPTIONS) options?: VisionNestJSOptions,
-    private readonly reflector?: Reflector,
+    @Optional() private readonly reflector?: Reflector,
   ) {
     this.config = {
       ...DEFAULT_VISION_NESTJS_OPTIONS,
@@ -101,10 +102,10 @@ export class VisionInterceptor implements NestInterceptor {
     }
 
     // Check if this method/class is marked to be ignored
-    const isIgnored = this.reflector?.getAllAndOverride<boolean>(
-      VISION_IGNORE_METADATA,
-      [context.getHandler(), context.getClass()],
-    );
+    const isIgnored = this.reflector?.getAllAndOverride<boolean>(VISION_IGNORE_METADATA, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
     if (isIgnored) {
       return next.handle();
@@ -148,7 +149,13 @@ export class VisionInterceptor implements NestInterceptor {
           });
 
           // Capture success metadata
-          this.captureSuccessMetadata(context, result, performanceStartTime, memoryUsageStart, captureConfig);
+          this.captureSuccessMetadata(
+            context,
+            result,
+            performanceStartTime,
+            memoryUsageStart,
+            captureConfig,
+          );
 
           subscriber.next(result);
           subscriber.complete();
@@ -174,7 +181,7 @@ export class VisionInterceptor implements NestInterceptor {
 
   private shouldExcludeRoute(context: ExecutionContext): boolean {
     const contextType = context.getType<VisionExecutionContextType>();
-    
+
     // Only check route exclusion for HTTP contexts
     if (contextType !== "http") {
       return false;
@@ -272,7 +279,7 @@ export class VisionInterceptor implements NestInterceptor {
     vision.merge("request", httpInfo);
   }
 
-  private async captureGraphQLData(context: ExecutionContext, captureConfig?: VisionCaptureConfig) {
+  private async captureGraphQLData(context: ExecutionContext, _captureConfig?: VisionCaptureConfig) {
     if (!this.config.captureGraphQLOperation) {
       return;
     }
@@ -285,7 +292,10 @@ export class VisionInterceptor implements NestInterceptor {
     }
   }
 
-  private async captureWebSocketData(context: ExecutionContext, captureConfig?: VisionCaptureConfig) {
+  private async captureWebSocketData(
+    context: ExecutionContext,
+    _captureConfig?: VisionCaptureConfig,
+  ) {
     if (!this.config.captureWebSocketEvents) {
       return;
     }
@@ -298,7 +308,10 @@ export class VisionInterceptor implements NestInterceptor {
     }
   }
 
-  private async captureMicroserviceData(context: ExecutionContext, captureConfig?: VisionCaptureConfig) {
+  private async captureMicroserviceData(
+    context: ExecutionContext,
+    _captureConfig?: VisionCaptureConfig,
+  ) {
     if (!this.config.captureMicroserviceMessages) {
       return;
     }
@@ -325,7 +338,10 @@ export class VisionInterceptor implements NestInterceptor {
       vision.set("execution_time_ms", executionTime);
 
       // Mark slow operations
-      if (this.config.performance.slowOperationThreshold && executionTime > this.config.performance.slowOperationThreshold) {
+      if (
+        this.config.performance.slowOperationThreshold &&
+        executionTime > this.config.performance.slowOperationThreshold
+      ) {
         vision.set("slow_operation", true);
         vision.set("slow_operation_threshold_ms", this.config.performance.slowOperationThreshold);
       }
@@ -405,7 +421,7 @@ export class VisionInterceptor implements NestInterceptor {
     if (contextType === "http") {
       try {
         const request = context.switchToHttp().getRequest();
-        
+
         for (const header of this.config.correlationIdHeaders) {
           const value = request.headers?.[header] || request.headers?.[header.toLowerCase()];
           if (typeof value === "string" && value.trim()) {
@@ -420,12 +436,12 @@ export class VisionInterceptor implements NestInterceptor {
     return undefined;
   }
 
-  private postProcessSuccess(context: ExecutionContext, data: any) {
+  private postProcessSuccess(_context: ExecutionContext, _data: any) {
     // Hook for additional post-processing after successful execution
     // Can be extended for custom business logic
   }
 
-  private postProcessError(context: ExecutionContext, error: any) {
+  private postProcessError(_context: ExecutionContext, _error: any) {
     // Hook for additional post-processing after error
     // Can be extended for custom error handling
   }

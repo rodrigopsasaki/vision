@@ -1,7 +1,6 @@
 import { describe, test, expect, vi } from "vitest";
 
 import { vision } from "../src";
-import type { VisionContext } from "../src/core/types";
 
 describe("vision integration", () => {
   test("propagates context across async layers", async () => {
@@ -45,13 +44,13 @@ describe("vision integration", () => {
     const exporter1 = {
       name: "first",
       success: vi.fn(),
-      before: (ctx: VisionContext) => {
+      before: () => {
         executionOrder.push("first-before");
       },
-      after: (ctx: VisionContext) => {
+      after: () => {
         executionOrder.push("first-after");
       },
-      onError: (ctx: VisionContext, err: unknown) => {
+      onError: () => {
         executionOrder.push("first-onError");
       },
     };
@@ -59,13 +58,13 @@ describe("vision integration", () => {
     const exporter2 = {
       name: "second",
       success: vi.fn(),
-      before: (ctx: VisionContext) => {
+      before: () => {
         executionOrder.push("second-before");
       },
-      after: (ctx: VisionContext) => {
+      after: () => {
         executionOrder.push("second-after");
       },
-      onError: (ctx: VisionContext, err: unknown) => {
+      onError: () => {
         executionOrder.push("second-onError");
       },
     };
@@ -100,13 +99,13 @@ describe("vision integration", () => {
       name: "error-handler",
       success: vi.fn(),
       error: vi.fn(),
-      before: (ctx: VisionContext) => {
+      before: () => {
         executionOrder.push("before");
       },
-      after: (ctx: VisionContext) => {
+      after: () => {
         executionOrder.push("after");
       },
-      onError: (ctx: VisionContext, err: unknown) => {
+      onError: () => {
         executionOrder.push("onError");
       },
     };
@@ -137,7 +136,7 @@ describe("vision integration", () => {
     const exporter = {
       name: "partial-exporter",
       success: vi.fn(),
-      before: (ctx: VisionContext) => {
+      before: () => {
         beforeCalled();
       },
       // No after or onError hooks
@@ -164,10 +163,10 @@ describe("vision integration", () => {
     const exporter = {
       name: "error-exporter",
       success: vi.fn(),
-      before: (ctx: VisionContext) => {
+      before: () => {
         throw beforeError;
       },
-      after: (ctx: VisionContext) => {
+      after: () => {
         throw afterError;
       },
     };

@@ -1,14 +1,12 @@
 import { vision } from "@rodrigopsasaki/vision";
 import { DataSource, EntityManager, QueryRunner } from "typeorm";
+
 import type { VisionTypeOrmConfig, TypeOrmTransactionMeta } from "./types";
 import { DEFAULT_CONFIG, extractErrorDetails } from "./utils";
+import { instrumentRepository } from "./instrumentTypeOrm";
 
 // TypeORM 0.3 isolation levels as string union
-type IsolationLevel = 
-  | "READ UNCOMMITTED"
-  | "READ COMMITTED" 
-  | "REPEATABLE READ"
-  | "SERIALIZABLE";
+type IsolationLevel = "READ UNCOMMITTED" | "READ COMMITTED" | "REPEATABLE READ" | "SERIALIZABLE";
 
 /**
  * Enhanced transaction wrapper that provides Vision observability
@@ -208,19 +206,37 @@ function createTransactionManagerProxy(
         return originalMethod;
       }
 
+      // Handle getRepository to return instrumented repositories
+      if (method === "getRepository") {
+        return function (...args: unknown[]) {
+          const repository = (originalMethod as Function).apply(target, args);
+          return instrumentRepository(repository, config);
+        };
+      }
+
       // Track query operations
       const queryMethods = [
-        "query", "save", "insert", "update", "delete", "remove",
-        "find", "findOne", "findBy", "findOneBy", "count", "countBy"
+        "query",
+        "save",
+        "insert",
+        "update",
+        "delete",
+        "remove",
+        "find",
+        "findOne",
+        "findBy",
+        "findOneBy",
+        "count",
+        "countBy",
       ];
 
       if (queryMethods.includes(method)) {
         return function (...args: unknown[]) {
           meta.queryCount = (meta.queryCount || 0) + 1;
-          
+
           // Add query tracking to current Vision context
           try {
-            const currentCount = vision.get("database.query_count") as number || 0;
+            const currentCount = (vision.get("database.query_count") as number) || 0;
             vision.set("database.query_count", currentCount + 1);
           } catch {
             // Not in a Vision context, ignore

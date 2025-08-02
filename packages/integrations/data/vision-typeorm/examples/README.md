@@ -5,23 +5,28 @@ This directory contains comprehensive examples demonstrating how to use the Visi
 ## Examples Overview
 
 ### 1. Basic Usage (`basic-usage.ts`)
+
 The simplest way to get started with Vision TypeORM integration.
 
 **Features demonstrated:**
+
 - Zero-configuration setup
 - Automatic DataSource instrumentation
 - Repository operation observability
 - Basic Vision context usage
 
 **Run it:**
+
 ```bash
 npm run dev examples/basic-usage.ts
 ```
 
 ### 2. Advanced Usage (`advanced-usage.ts`)
+
 Comprehensive example with advanced features and configuration options.
 
 **Features demonstrated:**
+
 - Advanced configuration options
 - Security redaction
 - Transaction instrumentation with isolation levels
@@ -30,14 +35,17 @@ Comprehensive example with advanced features and configuration options.
 - Error handling and context
 
 **Run it:**
+
 ```bash
 npm run dev examples/advanced-usage.ts
 ```
 
 ### 3. Performance Optimized (`performance-optimized.ts`)
+
 Production-ready configuration focused on minimal overhead and maximum performance.
 
 **Features demonstrated:**
+
 - Performance-optimized configuration
 - Selective instrumentation
 - Connection pool monitoring
@@ -46,14 +54,17 @@ Production-ready configuration focused on minimal overhead and maximum performan
 - High-frequency operation handling
 
 **Run it:**
+
 ```bash
 npm run dev examples/performance-optimized.ts
 ```
 
 ### 4. Microservice Architecture (`microservice-example.ts`)
+
 Distributed system example with correlation IDs and cross-service tracing.
 
 **Features demonstrated:**
+
 - Multiple DataSource instrumentation
 - Correlation ID propagation
 - Distributed transaction orchestration
@@ -62,6 +73,7 @@ Distributed system example with correlation IDs and cross-service tracing.
 - Error handling across services
 
 **Run it:**
+
 ```bash
 npm run dev examples/microservice-example.ts
 ```
@@ -69,14 +81,18 @@ npm run dev examples/microservice-example.ts
 ## Common Patterns
 
 ### DataSource Instrumentation
+
 ```typescript
 import { instrumentDataSource } from "@rodrigopsasaki/vision-typeorm";
 
-const dataSource = new DataSource({ /* config */ });
+const dataSource = new DataSource({
+  /* config */
+});
 const instrumentedDataSource = instrumentDataSource(dataSource);
 ```
 
 ### Transaction Observability
+
 ```typescript
 import { visionTransaction } from "@rodrigopsasaki/vision-typeorm";
 
@@ -88,6 +104,7 @@ await visionTransaction(dataSource, async (manager) => {
 ```
 
 ### Decorator-Based Instrumentation
+
 ```typescript
 import { VisionInstrumented, VisionObserve } from "@rodrigopsasaki/vision-typeorm";
 
@@ -103,6 +120,7 @@ class UserService {
 ## Configuration Options
 
 ### Basic Configuration
+
 ```typescript
 const config = {
   enabled: true,
@@ -113,6 +131,7 @@ const config = {
 ```
 
 ### Security-First Configuration
+
 ```typescript
 const config = {
   logParams: true,
@@ -122,6 +141,7 @@ const config = {
 ```
 
 ### Performance Configuration
+
 ```typescript
 const config = {
   logParams: false,
@@ -158,6 +178,7 @@ Examples use different databases to demonstrate compatibility:
 - **PostgreSQL**: Advanced examples (requires running PostgreSQL)
 
 ### PostgreSQL Setup
+
 ```bash
 # Using Docker
 docker run --name vision-postgres -e POSTGRES_PASSWORD=password -e POSTGRES_USER=user -p 5432:5432 -d postgres

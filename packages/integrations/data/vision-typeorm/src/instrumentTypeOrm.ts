@@ -69,52 +69,122 @@ export function instrumentDataSource(
 
         const operationName = createOperationName(method, undefined, finalConfig);
 
-        return vision.observe(operationName, async () => {
-          // Set basic operation metadata
-          vision.set("database.operation", meta.operation);
-          vision.set("database.target", meta.target);
-          vision.set("database.type", meta.type);
+        // Check if the method is async by calling it and checking the result
+        const isAsyncMethod = method.endsWith("Async") || ["transaction", "query", "initialize", "destroy", "runMigrations", "synchronize"].includes(method);
+        
+        if (isAsyncMethod) {
+          return vision.observe(operationName, async () => {
+            // Set basic operation metadata
+            vision.set("database.operation", meta.operation);
+            vision.set("database.target", meta.target);
+            vision.set("database.type", meta.type);
 
-          if (finalConfig.logParams && meta.args) {
-            vision.set("database.params", meta.args);
-          }
+            if (finalConfig.logParams && meta.args) {
+              vision.set("database.params", meta.args);
+            }
 
-          if (finalConfig.logConnectionInfo) {
-            vision.set("database.provider", "typeorm");
-            if (target.options) {
-              vision.set("database.driver", target.options.type);
-              if (target.options.database) {
-                vision.set("database.name", target.options.database);
+            if (finalConfig.logConnectionInfo) {
+              vision.set("database.provider", "typeorm");
+              if (target.options) {
+                vision.set("database.driver", target.options.type);
+                if (target.options.database) {
+                  vision.set("database.name", target.options.database);
+                }
               }
             }
-          }
 
+            const startTime = Date.now();
+
+            try {
+              // Execute the original method
+              const result = await (originalMethod as any).apply(target, args);
+
+              const duration = Date.now() - startTime;
+              vision.set("database.duration_ms", duration);
+              vision.set("database.success", true);
+
+              // Log result count for queries that return arrays
+              if (finalConfig.logResultCount && Array.isArray(result)) {
+                vision.set("database.result_count", result.length);
+              }
+
+              // Instrument repositories returned by getRepository
+              if (method === "getRepository" && result) {
+                return instrumentRepository(result as Repository<Record<string, any>>, finalConfig);
+              }
+
+              // Instrument entity manager
+              if ((method === "manager" || method === "createEntityManager") && result) {
+                return instrumentEntityManager(result as EntityManager, finalConfig);
+              }
+
+              // Instrument query runner
+              if (method === "createQueryRunner" && result) {
+                return instrumentQueryRunner(result as QueryRunner, finalConfig);
+              }
+
+              return result;
+            } catch (error) {
+              const duration = Date.now() - startTime;
+              vision.set("database.duration_ms", duration);
+              vision.set("database.success", false);
+              vision.set("database.error", error instanceof Error ? error.message : String(error));
+
+              const errorDetails = extractErrorDetails(error);
+              if (Object.keys(errorDetails).length > 0) {
+                vision.set("database.error_details", errorDetails);
+              }
+
+              throw error;
+            }
+          });
+        } else {
+          // For synchronous methods, execute immediately and then observe
           const startTime = Date.now();
-
+          
           try {
-            // Execute the original method
-            const result = await (originalMethod as any).apply(target, args);
+            // Execute the original method synchronously
+            const result = (originalMethod as any).apply(target, args);
 
             const duration = Date.now() - startTime;
-            vision.set("database.duration_ms", duration);
-            vision.set("database.success", true);
 
-            // Log result count for queries that return arrays
-            if (finalConfig.logResultCount && Array.isArray(result)) {
-              vision.set("database.result_count", result.length);
-            }
+            // Create an observation for the synchronous operation
+            vision.observe(operationName, async () => {
+              vision.set("database.operation", meta.operation);
+              vision.set("database.target", meta.target);
+              vision.set("database.type", meta.type);
+              vision.set("database.duration_ms", duration);
+              vision.set("database.success", true);
 
-            // Instrument repositories returned by getRepository
+              if (finalConfig.logParams && meta.args) {
+                vision.set("database.params", meta.args);
+              }
+
+              if (finalConfig.logConnectionInfo) {
+                vision.set("database.provider", "typeorm");
+                if (target.options) {
+                  vision.set("database.driver", target.options.type);
+                  if (target.options.database) {
+                    vision.set("database.name", target.options.database);
+                  }
+                }
+              }
+
+              // Log result count for queries that return arrays
+              if (finalConfig.logResultCount && Array.isArray(result)) {
+                vision.set("database.result_count", result.length);
+              }
+            });
+
+            // Instrument special return values
             if (method === "getRepository" && result) {
               return instrumentRepository(result as Repository<Record<string, any>>, finalConfig);
             }
 
-            // Instrument entity manager
             if ((method === "manager" || method === "createEntityManager") && result) {
               return instrumentEntityManager(result as EntityManager, finalConfig);
             }
 
-            // Instrument query runner
             if (method === "createQueryRunner" && result) {
               return instrumentQueryRunner(result as QueryRunner, finalConfig);
             }
@@ -122,18 +192,25 @@ export function instrumentDataSource(
             return result;
           } catch (error) {
             const duration = Date.now() - startTime;
-            vision.set("database.duration_ms", duration);
-            vision.set("database.success", false);
-            vision.set("database.error", error instanceof Error ? error.message : String(error));
 
-            const errorDetails = extractErrorDetails(error);
-            if (Object.keys(errorDetails).length > 0) {
-              vision.set("database.error_details", errorDetails);
-            }
+            // Create an observation for the failed synchronous operation
+            vision.observe(operationName, async () => {
+              vision.set("database.operation", meta.operation);
+              vision.set("database.target", meta.target);
+              vision.set("database.type", meta.type);
+              vision.set("database.duration_ms", duration);
+              vision.set("database.success", false);
+              vision.set("database.error", error instanceof Error ? error.message : String(error));
+
+              const errorDetails = extractErrorDetails(error);
+              if (Object.keys(errorDetails).length > 0) {
+                vision.set("database.error_details", errorDetails);
+              }
+            });
 
             throw error;
           }
-        });
+        }
       };
     },
   });
@@ -430,7 +507,7 @@ export function instrumentQueryRunner(
           if (method === "query" && args.length > 0 && typeof args[0] === "string") {
             const query = truncateQuery(args[0], finalConfig.maxQueryLength);
             vision.set("database.query", query);
-            
+
             if (args.length > 1 && finalConfig.logParams) {
               const params = redactSensitiveData(args[1], finalConfig.redactFields);
               vision.set("database.query_params", params);

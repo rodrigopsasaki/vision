@@ -1,20 +1,20 @@
 /**
  * Advanced Vision TypeORM Integration Example
- * 
+ *
  * This example demonstrates advanced configuration options, transaction
  * instrumentation, and decorator-based observability.
  */
 
 import { DataSource, Entity, PrimaryGeneratedColumn, Column } from "typeorm";
 import { vision } from "@rodrigopsasaki/vision";
-import { 
-  instrumentDataSource, 
+import {
+  instrumentDataSource,
   visionTransaction,
   visionTransactionWithIsolation,
   VisionInstrumented,
   VisionObserve,
   VisionParam,
-  type VisionTypeOrmConfig 
+  type VisionTypeOrmConfig,
 } from "@rodrigopsasaki/vision-typeorm";
 
 @Entity()
@@ -67,9 +67,9 @@ const advancedConfig: VisionTypeOrmConfig = {
 };
 
 // Service class with decorator-based instrumentation
-@VisionInstrumented({ 
+@VisionInstrumented({
   logParams: true,
-  operationPrefix: "service"
+  operationPrefix: "service",
 })
 class UserService {
   constructor(private dataSource: DataSource) {}
@@ -90,10 +90,10 @@ class UserService {
     // This method uses manual Vision observability
     return vision.observe("service.user.incrementLogin", async () => {
       vision.set("user_id", userId);
-      
+
       const userRepository = this.dataSource.getRepository(User);
       const user = await userRepository.findOne({ where: { id: userId } });
-      
+
       if (!user) {
         vision.set("error", "user_not_found");
         throw new Error("User not found");
@@ -101,7 +101,7 @@ class UserService {
 
       user.loginCount += 1;
       const updatedUser = await userRepository.save(user);
-      
+
       vision.set("new_login_count", updatedUser.loginCount);
       return updatedUser;
     });
@@ -144,18 +144,18 @@ async function advancedExample() {
         const orderRepository = manager.getRepository(Order);
         const orders = await Promise.all([
           orderRepository.save({ amount: 99.99, userId: user.id, status: "pending" }),
-          orderRepository.save({ amount: 149.50, userId: user.id, status: "pending" }),
+          orderRepository.save({ amount: 149.5, userId: user.id, status: "pending" }),
           orderRepository.save({ amount: 75.25, userId: user.id, status: "pending" }),
         ]);
 
         // Calculate total order value
         const totalAmount = orders.reduce((sum, order) => sum + Number(order.amount), 0);
-        
+
         // Business logic: Apply discount for high-value customers
         if (totalAmount > 200) {
           vision.set("discount_applied", true);
           vision.set("discount_amount", totalAmount * 0.1);
-          
+
           // Update all orders with discount
           for (const order of orders) {
             order.amount = Number(order.amount) * 0.9;
@@ -164,7 +164,7 @@ async function advancedExample() {
         }
 
         return { user, orders, totalAmount };
-      }
+      },
     );
 
     console.log("Transaction completed successfully:", result);
@@ -175,7 +175,7 @@ async function advancedExample() {
   // Example 2: Manual query runner for complex operations
   await vision.observe("data.migration", async () => {
     vision.set("operation_type", "bulk_update");
-    
+
     const queryRunner = instrumentedDataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -185,13 +185,13 @@ async function advancedExample() {
       const result = await queryRunner.query(
         `UPDATE "user" SET "loginCount" = "loginCount" + 1 
          WHERE "email" LIKE $1`,
-        ['%@example.com']
+        ["%@example.com"],
       );
 
       vision.set("affected_rows", result.affectedRows);
-      
+
       await queryRunner.commitTransaction();
-      
+
       vision.set("migration_status", "completed");
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -242,7 +242,7 @@ async function advancedExample() {
 
 /**
  * Advanced output includes detailed database observability:
- * 
+ *
  * Transaction observability:
  * {
  *   "name": "database.transaction.isolated",
@@ -256,7 +256,7 @@ async function advancedExample() {
  *     "discount_amount": 32.474
  *   }
  * }
- * 
+ *
  * Individual operations with security:
  * {
  *   "name": "database.user.save",

@@ -51,6 +51,7 @@
     "nodejs"
   ],
   "devDependencies": {
+    "@rodrigopsasaki/vision": "workspace:*",
     "@types/express": "^4.17.21",
     "@types/node": "^20.0.0",
     "@types/supertest": "^6.0.2",

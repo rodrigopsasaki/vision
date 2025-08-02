@@ -27,4 +27,4 @@ export {
 } from "./utils";
 
 // Default configuration
-export { DEFAULT_VISION_EXPRESS_OPTIONS } from "./types"; 
+export { DEFAULT_VISION_EXPRESS_OPTIONS } from "./types";

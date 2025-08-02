@@ -53,6 +53,7 @@
   ],
   "devDependencies": {
     "@prisma/client": "^5.0.0",
+    "@rodrigopsasaki/vision": "workspace:*",
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^8.36.0",
     "@typescript-eslint/parser": "^8.36.0",

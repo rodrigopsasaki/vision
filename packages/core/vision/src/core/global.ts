@@ -30,7 +30,7 @@ const DEFAULT_NORMALIZATION_CONFIG = {
  * Initializes the vision runtime with optional custom configuration.
  *
  * This function sets up the global vision runtime state, including the default
- * exporters and normalization settings. If no options are provided, it uses 
+ * exporters and normalization settings. If no options are provided, it uses
  * the default console exporter and disabled normalization.
  *
  * @param options - Optional runtime configuration

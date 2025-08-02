@@ -187,17 +187,17 @@ export interface VisionRequest extends Request {
 /**
  * Extended Express Response interface with Vision context.
  */
-export interface VisionResponse extends Omit<Response, 'end' | 'set'> {
+export interface VisionResponse extends Omit<Response, "end" | "set"> {
   /**
    * The active Vision context for this response.
    */
   visionContext?: VisionContext;
-  
+
   /**
    * Override end method to capture response metadata.
    */
   end(chunk?: any, encoding?: any, cb?: any): VisionResponse;
-  
+
   /**
    * Set response header.
    */
@@ -221,11 +221,11 @@ export const DEFAULT_VISION_EXPRESS_OPTIONS: Required<VisionExpressOptions> = {
   excludeRoutes: ["/health", "/metrics", "/status", "/favicon.ico"],
   correlationIdHeaders: [
     "x-correlation-id",
-    "x-request-id", 
+    "x-request-id",
     "x-trace-id",
     "x-transaction-id",
     "correlation-id",
-    "request-id"
+    "request-id",
   ],
   captureRequestMetadata: true,
   captureResponseMetadata: true,
@@ -238,10 +238,9 @@ export const DEFAULT_VISION_EXPRESS_OPTIONS: Required<VisionExpressOptions> = {
   captureIp: true,
   captureTiming: true,
   captureErrors: true,
-  
-  contextNameGenerator: (req) => 
-    `${req.method.toLowerCase()}.${req.route?.path || req.path}`,
-  
+
+  contextNameGenerator: (req) => `${req.method.toLowerCase()}.${req.route?.path || req.path}`,
+
   shouldExcludeRoute: (req) => {
     const path = req.path.toLowerCase();
     return (
@@ -252,31 +251,33 @@ export const DEFAULT_VISION_EXPRESS_OPTIONS: Required<VisionExpressOptions> = {
       path.includes("/favicon.ico")
     );
   },
-  
+
   extractMetadata: () => ({}),
-  
+
   extractUser: (req) => {
-    return (req as any).user || 
-           (req as any).session?.user ||
-           req.headers["x-user-id"] ||
-           req.headers["x-user"] ||
-           undefined;
-  },
-  
-  extractCorrelationId: (req) => {
     return (
-      req.headers["x-correlation-id"] as string ||
-      req.headers["x-request-id"] as string ||
-      req.headers["x-trace-id"] as string
+      (req as any).user ||
+      (req as any).session?.user ||
+      req.headers["x-user-id"] ||
+      req.headers["x-user"] ||
+      undefined
     );
   },
-  
+
+  extractCorrelationId: (req) => {
+    return (
+      (req.headers["x-correlation-id"] as string) ||
+      (req.headers["x-request-id"] as string) ||
+      (req.headers["x-trace-id"] as string)
+    );
+  },
+
   extractTenant: () => undefined,
-  
+
   includeRequestIdInResponse: true,
   includeRequestId: true,
   requestIdHeader: "X-Request-ID",
-  
+
   redactSensitiveData: true,
   redactedHeaders: [
     "authorization",
@@ -284,7 +285,7 @@ export const DEFAULT_VISION_EXPRESS_OPTIONS: Required<VisionExpressOptions> = {
     "x-api-key",
     "x-auth-token",
     "x-session-token",
-    "x-csrf-token"
+    "x-csrf-token",
   ],
   redactHeaders: [
     "authorization",
@@ -292,40 +293,12 @@ export const DEFAULT_VISION_EXPRESS_OPTIONS: Required<VisionExpressOptions> = {
     "x-api-key",
     "x-auth-token",
     "x-session-token",
-    "x-csrf-token"
+    "x-csrf-token",
   ],
-  redactedQueryParams: [
-    "token",
-    "key",
-    "secret",
-    "password",
-    "auth",
-    "api_key"
-  ],
-  redactQueryParams: [
-    "token",
-    "key",
-    "secret",
-    "password",
-    "auth",
-    "api_key"
-  ],
-  redactedBodyFields: [
-    "password",
-    "ssn",
-    "credit_card",
-    "secret",
-    "api_key",
-    "private_key"
-  ],
-  redactBodyFields: [
-    "password",
-    "ssn",
-    "credit_card",
-    "secret",
-    "api_key",
-    "private_key"
-  ],
+  redactedQueryParams: ["token", "key", "secret", "password", "auth", "api_key"],
+  redactQueryParams: ["token", "key", "secret", "password", "auth", "api_key"],
+  redactedBodyFields: ["password", "ssn", "credit_card", "secret", "api_key", "private_key"],
+  redactBodyFields: ["password", "ssn", "credit_card", "secret", "api_key", "private_key"],
 };
 
 /**
@@ -371,4 +344,4 @@ export interface ErrorMetadata {
   stack?: string;
   code?: string;
   statusCode?: number;
-} 
+}

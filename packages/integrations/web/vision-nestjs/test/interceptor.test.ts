@@ -1,8 +1,8 @@
-import { vision } from "@rodrigopsasaki/vision";
 import { ExecutionContext } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vision } from "@rodrigopsasaki/vision";
 import { lastValueFrom, of, throwError, delay } from "rxjs";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { VisionInterceptor } from "../src/interceptor";
 import { DEFAULT_VISION_NESTJS_OPTIONS, VISION_IGNORE_METADATA } from "../src/types";
@@ -94,7 +94,7 @@ describe("VisionInterceptor", () => {
 
     it("should skip Vision context when globally disabled", async () => {
       const disabledInterceptor = new VisionInterceptor({ enabled: false }, mockReflector);
-      
+
       const result$ = disabledInterceptor.intercept(mockContext, mockCallHandler);
       const result = await lastValueFrom(result$);
 
@@ -103,7 +103,8 @@ describe("VisionInterceptor", () => {
     });
 
     it("should skip Vision context when method is marked with @VisionIgnore", async () => {
-      mockReflector.getAllAndOverride = vi.fn()
+      mockReflector.getAllAndOverride = vi
+        .fn()
         .mockReturnValueOnce(true) // VisionIgnore metadata
         .mockReturnValue(undefined);
 
@@ -112,10 +113,10 @@ describe("VisionInterceptor", () => {
 
       expect(result).toBe("test result");
       expect(capturedContexts).toHaveLength(0);
-      expect(mockReflector.getAllAndOverride).toHaveBeenCalledWith(
-        VISION_IGNORE_METADATA,
-        [mockContext.getHandler(), mockContext.getClass()],
-      );
+      expect(mockReflector.getAllAndOverride).toHaveBeenCalledWith(VISION_IGNORE_METADATA, [
+        mockContext.getHandler(),
+        mockContext.getClass(),
+      ]);
     });
 
     it("should exclude routes based on configuration", async () => {
@@ -197,10 +198,13 @@ describe("VisionInterceptor", () => {
       await expect(lastValueFrom(result$)).rejects.toThrow("Test error");
       expect(capturedContexts).toHaveLength(1);
       expect(vision.set).toHaveBeenCalledWith("success", false);
-      expect(vision.merge).toHaveBeenCalledWith("error", expect.objectContaining({
-        name: "Error",
-        message: "Test error",
-      }));
+      expect(vision.merge).toHaveBeenCalledWith(
+        "error",
+        expect.objectContaining({
+          name: "Error",
+          message: "Test error",
+        }),
+      );
     });
   });
 
@@ -215,9 +219,7 @@ describe("VisionInterceptor", () => {
       );
 
       // Mock a slow operation with Observable delay
-      mockCallHandler.handle = vi.fn().mockReturnValue(
-        of("slow result").pipe(delay(150))
-      );
+      mockCallHandler.handle = vi.fn().mockReturnValue(of("slow result").pipe(delay(150)));
 
       const result$ = performanceInterceptor.intercept(mockContext, mockCallHandler);
       const result = await lastValueFrom(result$);
@@ -236,7 +238,8 @@ describe("VisionInterceptor", () => {
         initial: { custom_data: "test" },
       };
 
-      mockReflector.getAllAndOverride = vi.fn()
+      mockReflector.getAllAndOverride = vi
+        .fn()
         .mockReturnValueOnce(false) // VisionIgnore
         .mockReturnValueOnce(methodConfig) // VisionContext
         .mockReturnValue(undefined);
@@ -261,7 +264,8 @@ describe("VisionInterceptor", () => {
         body: true,
       };
 
-      mockReflector.getAllAndOverride = vi.fn()
+      mockReflector.getAllAndOverride = vi
+        .fn()
         .mockReturnValueOnce(false) // VisionIgnore
         .mockReturnValueOnce(undefined) // VisionContext
         .mockReturnValueOnce(captureConfig); // VisionCapture
@@ -277,12 +281,15 @@ describe("VisionInterceptor", () => {
       const result$ = interceptor.intercept(mockContext, mockCallHandler);
       await lastValueFrom(result$);
 
-      expect(vision.merge).toHaveBeenCalledWith("request", expect.objectContaining({
-        method: "POST",
-        path: "/test",
-        headers: expect.any(Object),
-        body: expect.any(Object),
-      }));
+      expect(vision.merge).toHaveBeenCalledWith(
+        "request",
+        expect.objectContaining({
+          method: "POST",
+          path: "/test",
+          headers: expect.any(Object),
+          body: expect.any(Object),
+        }),
+      );
     });
   });
 
@@ -306,13 +313,16 @@ describe("VisionInterceptor", () => {
       const result$ = interceptorWithCapture.intercept(mockContext, mockCallHandler);
       await lastValueFrom(result$);
 
-      expect(vision.merge).toHaveBeenCalledWith("request", expect.objectContaining({
-        headers: expect.objectContaining({
-          authorization: "[REDACTED]",
-          "x-api-key": "[REDACTED]",
-          "content-type": "application/json",
+      expect(vision.merge).toHaveBeenCalledWith(
+        "request",
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            authorization: "[REDACTED]",
+            "x-api-key": "[REDACTED]",
+            "content-type": "application/json",
+          }),
         }),
-      }));
+      );
     });
   });
 });

@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import micromatch from "micromatch";
+import * as micromatch from "micromatch";
 
 import type {
   RequestMetadata,
@@ -16,7 +16,7 @@ function redactObject(
   fieldsToRedact: string[],
 ): Record<string, unknown> {
   if (!obj || typeof obj !== "object") return obj;
-  
+
   const redacted = { ...obj };
   for (const field of fieldsToRedact) {
     if (field in redacted) {
@@ -31,7 +31,7 @@ function redactObject(
  */
 function safeGet(obj: any, path: string, defaultValue: any = undefined): any {
   try {
-    return path.split('.').reduce((current, key) => current?.[key], obj) ?? defaultValue;
+    return path.split(".").reduce((current, key) => current?.[key], obj) ?? defaultValue;
   } catch {
     return defaultValue;
   }
@@ -59,12 +59,12 @@ export function extractRequestMetadata(
 
   // Basic request info
   if (options.captureRequestMetadata) {
-    metadata.path = safeGet(request, 'routeOptions.url') || request.url;
+    metadata.path = safeGet(request, "routeOptions.url") || request.url;
   }
 
   // IP address
   if (options.captureIp) {
-    metadata.ip = request.ip || safeGet(request, 'socket.remoteAddress');
+    metadata.ip = request.ip || safeGet(request, "socket.remoteAddress");
   }
 
   // User agent
@@ -93,7 +93,10 @@ export function extractRequestMetadata(
   // Query parameters
   if (options.captureQuery && request.query) {
     if (options.redactSensitiveData) {
-      metadata.query = redactObject(request.query as Record<string, unknown>, options.redactQueryParams);
+      metadata.query = redactObject(
+        request.query as Record<string, unknown>,
+        options.redactQueryParams,
+      );
     } else {
       metadata.query = (request.query as Record<string, unknown>) || {};
     }
@@ -107,7 +110,10 @@ export function extractRequestMetadata(
   // Request body
   if (options.captureBody && request.method !== "GET" && request.body) {
     if (options.redactSensitiveData) {
-      metadata.body = redactObject(request.body as Record<string, unknown>, options.redactBodyFields);
+      metadata.body = redactObject(
+        request.body as Record<string, unknown>,
+        options.redactBodyFields,
+      );
     } else {
       metadata.body = request.body;
     }
@@ -134,9 +140,9 @@ export function extractRequestMetadata(
   // Fastify-specific metadata
   if (options.captureFastifyMetadata) {
     metadata.fastify = {
-      routeId: safeGet(request, 'routeOptions.id'),
-      routeOptions: safeGet(request, 'routeOptions'),
-      validation: safeGet(request, 'validationError'),
+      routeId: safeGet(request, "routeOptions.id"),
+      routeOptions: safeGet(request, "routeOptions"),
+      validation: safeGet(request, "validationError"),
     };
   }
 
@@ -180,8 +186,8 @@ export function extractResponseMetadata(
       metadata.headers = Object.fromEntries(
         Object.entries(headers).map(([key, value]) => [
           key,
-          Array.isArray(value) ? value.join(', ') : String(value || '')
-        ])
+          Array.isArray(value) ? value.join(", ") : String(value || ""),
+        ]),
       );
     } catch {
       // Headers might not be available in all contexts
@@ -193,7 +199,7 @@ export function extractResponseMetadata(
   if (options.captureFastifyMetadata) {
     metadata.fastify = {
       serialization: {
-        duration: safeGet(reply, 'serializationDuration'),
+        duration: safeGet(reply, "serializationDuration"),
       },
     };
   }
@@ -310,39 +316,48 @@ export function mergeOptions(
     captureTiming: true,
     captureFastifyMetadata: true,
 
-    contextNameGenerator: userOptions.contextNameGenerator ?? ((request) => 
-      `${request.method.toLowerCase()}.${safeGet(request, 'routeOptions.url') || request.url}`
-    ),
+    contextNameGenerator:
+      userOptions.contextNameGenerator ??
+      ((request) =>
+        `${request.method.toLowerCase()}.${safeGet(request, "routeOptions.url") || request.url}`),
 
-    shouldExcludeRoute: userOptions.shouldExcludeRoute ?? ((request) => {
-      const url = request.url.toLowerCase();
-      return (
-        url.includes("/health") ||
-        url.includes("/metrics") ||
-        url.includes("/status") ||
-        url.includes("/ping") ||
-        url.includes("/favicon.ico")
-      );
-    }),
+    shouldExcludeRoute:
+      userOptions.shouldExcludeRoute ??
+      ((request) => {
+        const url = request.url.toLowerCase();
+        return (
+          url.includes("/health") ||
+          url.includes("/metrics") ||
+          url.includes("/status") ||
+          url.includes("/ping") ||
+          url.includes("/favicon.ico")
+        );
+      }),
 
     extractMetadata: userOptions.extractMetadata ?? (() => ({})),
 
-    extractUser: userOptions.extractUser ?? ((request) => {
-      return (request as any).user || 
-             (request as any).session?.user ||
-             request.headers["x-user-id"] ||
-             request.headers["x-user"] ||
-             undefined;
-    }),
+    extractUser:
+      userOptions.extractUser ??
+      ((request) => {
+        return (
+          (request as any).user ||
+          (request as any).session?.user ||
+          request.headers["x-user-id"] ||
+          request.headers["x-user"] ||
+          undefined
+        );
+      }),
 
-    extractCorrelationId: userOptions.extractCorrelationId ?? ((request) => {
-      return (
-        request.headers["x-correlation-id"] as string ||
-        request.headers["x-request-id"] as string ||
-        request.headers["x-trace-id"] as string ||
-        request.headers["x-transaction-id"] as string
-      );
-    }),
+    extractCorrelationId:
+      userOptions.extractCorrelationId ??
+      ((request) => {
+        return (
+          (request.headers["x-correlation-id"] as string) ||
+          (request.headers["x-request-id"] as string) ||
+          (request.headers["x-trace-id"] as string) ||
+          (request.headers["x-transaction-id"] as string)
+        );
+      }),
 
     extractTenant: userOptions.extractTenant ?? (() => undefined),
 
@@ -356,7 +371,7 @@ export function mergeOptions(
       "x-api-key",
       "x-auth-token",
       "x-session-token",
-      "x-csrf-token"
+      "x-csrf-token",
     ],
     redactQueryParams: userOptions.redactQueryParams ?? [
       "token",
@@ -364,7 +379,7 @@ export function mergeOptions(
       "secret",
       "password",
       "auth",
-      "api_key"
+      "api_key",
     ],
     redactBodyFields: userOptions.redactBodyFields ?? [
       "password",
@@ -375,7 +390,7 @@ export function mergeOptions(
       "api_key",
       "apiKey",
       "private_key",
-      "privateKey"
+      "privateKey",
     ],
 
     correlationIdHeaders: userOptions.correlationIdHeaders ?? [
@@ -384,7 +399,7 @@ export function mergeOptions(
       "x-trace-id",
       "x-transaction-id",
       "correlation-id",
-      "request-id"
+      "request-id",
     ],
 
     performance: {
@@ -395,15 +410,18 @@ export function mergeOptions(
 
     errorHandling: {
       captureErrors: userOptions.errorHandling?.captureErrors ?? true,
-      captureStackTrace: userOptions.errorHandling?.captureStackTrace ?? (process.env.NODE_ENV !== "production"),
-      transformError: userOptions.errorHandling?.transformError ?? ((error, request) => ({
-        name: error.name,
-        message: error.message,
-        ...(process.env.NODE_ENV !== "production" && { stack: error.stack }),
-        statusCode: (error as any).statusCode,
-        code: (error as any).code,
-        validation: (error as any).validation,
-      })),
+      captureStackTrace:
+        userOptions.errorHandling?.captureStackTrace ?? process.env.NODE_ENV !== "production",
+      transformError:
+        userOptions.errorHandling?.transformError ??
+        ((error, request) => ({
+          name: error.name,
+          message: error.message,
+          ...(process.env.NODE_ENV !== "production" && { stack: error.stack }),
+          statusCode: (error as any).statusCode,
+          code: (error as any).code,
+          validation: (error as any).validation,
+        })),
     },
   };
 

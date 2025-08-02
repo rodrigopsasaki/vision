@@ -31,7 +31,7 @@ export class AuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    
+
     // Simulate authentication
     const authHeader = request.headers.authorization;
     const isAuthenticated = authHeader && authHeader.startsWith("Bearer ");
@@ -100,14 +100,14 @@ export class AnalyticsService {
 
         // Simulate complex data processing
         const steps = ["fetch_data", "process_data", "generate_charts", "format_output"];
-        
+
         for (const step of steps) {
           const stepStartTime = Date.now();
           try {
             // Simulate step processing time
             const processingTime = Math.random() * 500 + 100;
             await new Promise((resolve) => setTimeout(resolve, processingTime));
-            
+
             // Track step completion using core API
             vision.push("events", {
               event: "report_step_completed",
@@ -179,7 +179,7 @@ export class AnalyticsService {
         });
 
         return report;
-      }
+      },
     );
   }
 
@@ -265,7 +265,7 @@ export class AnalyticsController {
   async getPersonalDashboard() {
     // Example of accessing current Vision context
     const currentContext = this.visionService.getCurrentContext();
-    
+
     if (currentContext) {
       console.log("Processing request in context:", currentContext.id);
     }
@@ -290,23 +290,23 @@ export class VisionConfigService {
 
   createVisionOptions() {
     const isProduction = this.configService.get("NODE_ENV") === "production";
-    
+
     return {
       enabled: this.configService.get("VISION_ENABLED", !isProduction),
-      
+
       // Capture settings based on environment
       captureRequest: !isProduction,
       captureHeaders: this.configService.get("VISION_CAPTURE_HEADERS", false),
       captureBody: this.configService.get("VISION_CAPTURE_BODY", false),
       captureMethodExecution: !isProduction,
-      
+
       // Performance settings
       performance: {
         trackExecutionTime: true,
         trackMemoryUsage: this.configService.get("VISION_TRACK_MEMORY", false),
         slowOperationThreshold: this.configService.get("VISION_SLOW_THRESHOLD", 2000),
       },
-      
+
       // Exclude routes based on environment
       excludeRoutes: [
         "/health",
@@ -314,13 +314,13 @@ export class VisionConfigService {
         "/favicon.ico",
         ...(isProduction ? ["/docs", "/api-docs"] : []),
       ],
-      
+
       // Custom user extraction with error handling
       extractUser: (context) => {
         try {
           const request = context.switchToHttp().getRequest();
           if (!request.user) return undefined;
-          
+
           return {
             id: request.user.id,
             email: request.user.email,
@@ -333,7 +333,7 @@ export class VisionConfigService {
           return undefined;
         }
       },
-      
+
       // Enhanced error transformation
       transformError: (error: unknown, context) => {
         const baseError = {
@@ -344,12 +344,12 @@ export class VisionConfigService {
           handler: context.getHandler().name,
           controller: context.getClass().name,
         };
-        
+
         // Add stack trace in development
         if (!isProduction && error instanceof Error) {
           baseError.stack = error.stack;
         }
-        
+
         // Add custom error context based on error type
         if (error instanceof Error) {
           if (error.name === "ValidationError") {
@@ -360,7 +360,7 @@ export class VisionConfigService {
             baseError.category = "performance";
           }
         }
-        
+
         return baseError;
       },
     };
@@ -375,13 +375,16 @@ export class VisionConfigService {
       isGlobal: true,
       envFilePath: [".env.local", ".env"],
     }),
-    
+
     // Configure Vision asynchronously with custom factory
-    VisionModule.forRootAsync({
-      imports: [ConfigModule],
-      useClass: VisionConfigService,
-      isGlobal: true,
-    }, true), // Enable Vision Guard
+    VisionModule.forRootAsync(
+      {
+        imports: [ConfigModule],
+        useClass: VisionConfigService,
+        isGlobal: true,
+      },
+      true,
+    ), // Enable Vision Guard
   ],
   controllers: [AnalyticsController],
   providers: [AnalyticsService, AuthGuard, VisionConfigService],
@@ -411,7 +414,7 @@ export async function setupVisionWithCustomExporters() {
           });
         },
       },
-      
+
       // File exporter for persistent logging
       {
         name: "file-logger",
@@ -425,7 +428,7 @@ export async function setupVisionWithCustomExporters() {
             success: true,
             data: Object.fromEntries(ctx.data.entries()),
           };
-          
+
           // In a real app, you'd write to a file or send to a logging service
           console.log("📁 File Log:", JSON.stringify(logEntry, null, 2));
         },
@@ -443,26 +446,26 @@ export async function setupVisionWithCustomExporters() {
             },
             data: Object.fromEntries(ctx.data.entries()),
           };
-          
+
           console.error("📁 File Log (Error):", JSON.stringify(logEntry, null, 2));
         },
       },
-      
+
       // Metrics exporter for performance monitoring
       {
         name: "metrics-collector",
         success: (ctx) => {
           const executionTime = ctx.data.get("execution_time_ms");
           const isSlowOperation = ctx.data.get("slow_operation");
-          
+
           if (typeof executionTime === "number") {
             console.log(`📊 Metric: ${ctx.name}.execution_time = ${executionTime}ms`);
-            
+
             if (isSlowOperation) {
               console.warn(`🐌 Slow operation detected: ${ctx.name} took ${executionTime}ms`);
             }
           }
-          
+
           // Track custom metrics
           const customMetrics = ctx.data.get("custom_metrics");
           if (Array.isArray(customMetrics)) {
@@ -473,7 +476,7 @@ export async function setupVisionWithCustomExporters() {
         },
       },
     ],
-    
+
     // Configure key normalization for consistent metric names
     normalization: {
       enabled: true,

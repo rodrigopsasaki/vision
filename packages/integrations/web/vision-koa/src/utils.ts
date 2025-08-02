@@ -1,12 +1,7 @@
 import type { Context } from "koa";
-import micromatch from "micromatch";
+import * as micromatch from "micromatch";
 
-import type {
-  RequestMetadata,
-  ResponseMetadata,
-  ErrorMetadata,
-  VisionKoaOptions,
-} from "./types";
+import type { RequestMetadata, ResponseMetadata, ErrorMetadata, VisionKoaOptions } from "./types";
 
 /**
  * Redacts sensitive data from an object based on the provided field names.
@@ -16,7 +11,7 @@ function redactObject(
   fieldsToRedact: string[],
 ): Record<string, unknown> {
   if (!obj || typeof obj !== "object") return obj;
-  
+
   const redacted = { ...obj };
   for (const field of fieldsToRedact) {
     if (field in redacted) {
@@ -31,7 +26,7 @@ function redactObject(
  */
 function safeGet(obj: any, path: string, defaultValue: any = undefined): any {
   try {
-    return path.split('.').reduce((current, key) => current?.[key], obj) ?? defaultValue;
+    return path.split(".").reduce((current, key) => current?.[key], obj) ?? defaultValue;
   } catch {
     return defaultValue;
   }
@@ -65,7 +60,7 @@ export function extractRequestMetadata(
 
   // IP address
   if (options.captureIp) {
-    metadata.ip = ctx.ip || safeGet(ctx, 'request.socket.remoteAddress');
+    metadata.ip = ctx.ip || safeGet(ctx, "request.socket.remoteAddress");
   }
 
   // User agent
@@ -94,7 +89,10 @@ export function extractRequestMetadata(
   // Query parameters
   if (options.captureQuery && ctx.query) {
     if (options.redactSensitiveData) {
-      metadata.query = redactObject(ctx.query as Record<string, unknown>, options.redactQueryParams);
+      metadata.query = redactObject(
+        ctx.query as Record<string, unknown>,
+        options.redactQueryParams,
+      );
     } else {
       metadata.query = ctx.query;
     }
@@ -108,7 +106,7 @@ export function extractRequestMetadata(
   // Request body
   if (options.captureBody && ctx.method !== "GET" && (ctx.request as any).body) {
     const body = (ctx.request as any).body;
-    if (options.redactSensitiveData && typeof body === 'object' && body !== null) {
+    if (options.redactSensitiveData && typeof body === "object" && body !== null) {
       metadata.body = redactObject(body, options.redactBodyFields);
     } else {
       metadata.body = body;
@@ -283,17 +281,17 @@ function getStatusText(status: number): string {
  */
 function getCookiesAsObject(ctx: Context): Record<string, string> {
   const cookies: Record<string, string> = {};
-  
+
   try {
     // Koa cookies API
-    if (ctx.cookies && typeof ctx.cookies.get === 'function') {
+    if (ctx.cookies && typeof ctx.cookies.get === "function") {
       // This is a simplified approach - in practice, you'd iterate through known cookies
       const cookieHeader = ctx.headers.cookie;
       if (cookieHeader) {
-        cookieHeader.split(';').forEach(cookie => {
-          const [name, ...rest] = cookie.trim().split('=');
+        cookieHeader.split(";").forEach((cookie) => {
+          const [name, ...rest] = cookie.trim().split("=");
           if (name && rest.length > 0) {
-            cookies[name] = rest.join('=');
+            cookies[name] = rest.join("=");
           }
         });
       }
@@ -316,12 +314,13 @@ function shouldCaptureResponseBody(ctx: Context): boolean {
 
   // Don't capture binary responses
   const contentType = ctx.type;
-  if (contentType && (
-    contentType.includes('image/') ||
-    contentType.includes('video/') ||
-    contentType.includes('audio/') ||
-    contentType.includes('application/octet-stream')
-  )) {
+  if (
+    contentType &&
+    (contentType.includes("image/") ||
+      contentType.includes("video/") ||
+      contentType.includes("audio/") ||
+      contentType.includes("application/octet-stream"))
+  ) {
     return false;
   }
 
@@ -362,39 +361,46 @@ export function mergeOptions(
     captureTiming: true,
     captureKoaMetadata: true,
 
-    contextNameGenerator: userOptions.contextNameGenerator ?? ((ctx) => 
-      `${ctx.method.toLowerCase()}.${ctx.path}`
-    ),
+    contextNameGenerator:
+      userOptions.contextNameGenerator ?? ((ctx) => `${ctx.method.toLowerCase()}.${ctx.path}`),
 
-    shouldExcludeRoute: userOptions.shouldExcludeRoute ?? ((ctx) => {
-      const path = ctx.path.toLowerCase();
-      return (
-        path.includes("/health") ||
-        path.includes("/metrics") ||
-        path.includes("/status") ||
-        path.includes("/ping") ||
-        path.includes("/favicon.ico")
-      );
-    }),
+    shouldExcludeRoute:
+      userOptions.shouldExcludeRoute ??
+      ((ctx) => {
+        const path = ctx.path.toLowerCase();
+        return (
+          path.includes("/health") ||
+          path.includes("/metrics") ||
+          path.includes("/status") ||
+          path.includes("/ping") ||
+          path.includes("/favicon.ico")
+        );
+      }),
 
     extractMetadata: userOptions.extractMetadata ?? (() => ({})),
 
-    extractUser: userOptions.extractUser ?? ((ctx) => {
-      return (ctx as any).user || 
-             (ctx as any).state?.user ||
-             ctx.headers["x-user-id"] ||
-             ctx.headers["x-user"] ||
-             undefined;
-    }),
+    extractUser:
+      userOptions.extractUser ??
+      ((ctx) => {
+        return (
+          (ctx as any).user ||
+          (ctx as any).state?.user ||
+          ctx.headers["x-user-id"] ||
+          ctx.headers["x-user"] ||
+          undefined
+        );
+      }),
 
-    extractCorrelationId: userOptions.extractCorrelationId ?? ((ctx) => {
-      return (
-        ctx.headers["x-correlation-id"] as string ||
-        ctx.headers["x-request-id"] as string ||
-        ctx.headers["x-trace-id"] as string ||
-        ctx.headers["x-transaction-id"] as string
-      );
-    }),
+    extractCorrelationId:
+      userOptions.extractCorrelationId ??
+      ((ctx) => {
+        return (
+          (ctx.headers["x-correlation-id"] as string) ||
+          (ctx.headers["x-request-id"] as string) ||
+          (ctx.headers["x-trace-id"] as string) ||
+          (ctx.headers["x-transaction-id"] as string)
+        );
+      }),
 
     extractTenant: userOptions.extractTenant ?? (() => undefined),
 
@@ -408,7 +414,7 @@ export function mergeOptions(
       "x-api-key",
       "x-auth-token",
       "x-session-token",
-      "x-csrf-token"
+      "x-csrf-token",
     ],
     redactQueryParams: userOptions.redactQueryParams ?? [
       "token",
@@ -416,7 +422,7 @@ export function mergeOptions(
       "secret",
       "password",
       "auth",
-      "api_key"
+      "api_key",
     ],
     redactBodyFields: userOptions.redactBodyFields ?? [
       "password",
@@ -427,7 +433,7 @@ export function mergeOptions(
       "api_key",
       "apiKey",
       "private_key",
-      "privateKey"
+      "privateKey",
     ],
 
     correlationIdHeaders: userOptions.correlationIdHeaders ?? [
@@ -436,7 +442,7 @@ export function mergeOptions(
       "x-trace-id",
       "x-transaction-id",
       "correlation-id",
-      "request-id"
+      "request-id",
     ],
 
     performance: {
@@ -447,15 +453,18 @@ export function mergeOptions(
 
     errorHandling: {
       captureErrors: userOptions.errorHandling?.captureErrors ?? true,
-      captureStackTrace: userOptions.errorHandling?.captureStackTrace ?? (process.env.NODE_ENV !== "production"),
-      transformError: userOptions.errorHandling?.transformError ?? ((error, ctx) => ({
-        name: error.name,
-        message: error.message,
-        ...(process.env.NODE_ENV !== "production" && { stack: error.stack }),
-        status: (error as any).status,
-        code: (error as any).code,
-        expose: (error as any).expose,
-      })),
+      captureStackTrace:
+        userOptions.errorHandling?.captureStackTrace ?? process.env.NODE_ENV !== "production",
+      transformError:
+        userOptions.errorHandling?.transformError ??
+        ((error, ctx) => ({
+          name: error.name,
+          message: error.message,
+          ...(process.env.NODE_ENV !== "production" && { stack: error.stack }),
+          status: (error as any).status,
+          code: (error as any).code,
+          expose: (error as any).expose,
+        })),
     },
   };
 

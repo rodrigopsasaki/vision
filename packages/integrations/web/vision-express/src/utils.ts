@@ -64,7 +64,10 @@ export function extractRequestMetadata(
 
   if (options.captureQuery && req.query) {
     if (options.redactSensitiveData) {
-      metadata.query = redactObject(req.query as Record<string, unknown>, options.redactedQueryParams);
+      metadata.query = redactObject(
+        req.query as Record<string, unknown>,
+        options.redactedQueryParams,
+      );
     } else {
       metadata.query = req.query;
     }
@@ -100,10 +103,7 @@ export function extractRequestMetadata(
 /**
  * Extracts response metadata from the response object.
  */
-export function extractResponseMetadata(
-  res: any,
-  startTime: number,
-): ResponseMetadata {
+export function extractResponseMetadata(res: any, startTime: number): ResponseMetadata {
   const endTime = Date.now();
   const duration = endTime - startTime;
 
@@ -181,11 +181,11 @@ export function mergeOptions(
     excludeRoutes: userOptions.excludeRoutes ?? ["/health", "/metrics", "/status", "/favicon.ico"],
     correlationIdHeaders: userOptions.correlationIdHeaders ?? [
       "x-correlation-id",
-      "x-request-id", 
+      "x-request-id",
       "x-trace-id",
       "x-transaction-id",
       "correlation-id",
-      "request-id"
+      "request-id",
     ],
     captureRequestMetadata: userOptions.captureRequestMetadata ?? true,
     captureResponseMetadata: userOptions.captureResponseMetadata ?? true,
@@ -197,75 +197,69 @@ export function mergeOptions(
     captureUserAgent: userOptions.captureUserAgent ?? true,
     captureIp: userOptions.captureIp ?? true,
     captureTiming: userOptions.captureTiming ?? true,
-    contextNameGenerator: userOptions.contextNameGenerator ?? ((req) => 
-      `${req.method.toLowerCase()}.${req.route?.path || req.path}`
-    ),
-    shouldExcludeRoute: userOptions.shouldExcludeRoute ?? ((req) => {
-      const path = req.path.toLowerCase();
-      return (
-        path.includes("/health") ||
-        path.includes("/metrics") ||
-        path.includes("/status") ||
-        path.includes("/ping") ||
-        path.includes("/favicon.ico")
-      );
-    }),
+    contextNameGenerator:
+      userOptions.contextNameGenerator ??
+      ((req) => `${req.method.toLowerCase()}.${req.route?.path || req.path}`),
+    shouldExcludeRoute:
+      userOptions.shouldExcludeRoute ??
+      ((req) => {
+        const path = req.path.toLowerCase();
+        return (
+          path.includes("/health") ||
+          path.includes("/metrics") ||
+          path.includes("/status") ||
+          path.includes("/ping") ||
+          path.includes("/favicon.ico")
+        );
+      }),
     extractMetadata: userOptions.extractMetadata ?? (() => ({})),
     extractUser: userOptions.extractUser ?? (() => undefined),
-    extractCorrelationId: userOptions.extractCorrelationId ?? ((req) => {
-      return (
-        req.headers["x-correlation-id"] as string ||
-        req.headers["x-request-id"] as string ||
-        req.headers["x-trace-id"] as string
-      );
-    }),
+    extractCorrelationId:
+      userOptions.extractCorrelationId ??
+      ((req) => {
+        return (
+          (req.headers["x-correlation-id"] as string) ||
+          (req.headers["x-request-id"] as string) ||
+          (req.headers["x-trace-id"] as string)
+        );
+      }),
     extractTenant: userOptions.extractTenant ?? (() => undefined),
     includeRequestIdInResponse: userOptions.includeRequestIdInResponse ?? true,
-    includeRequestId: userOptions.includeRequestId ?? userOptions.includeRequestIdInResponse ?? true,
+    includeRequestId:
+      userOptions.includeRequestId ?? userOptions.includeRequestIdInResponse ?? true,
     requestIdHeader: userOptions.requestIdHeader ?? "X-Request-ID",
     captureErrors: userOptions.captureErrors ?? true,
     redactSensitiveData: userOptions.redactSensitiveData ?? true,
-    redactedHeaders: userOptions.redactedHeaders ?? userOptions.redactHeaders ?? [
-      "authorization",
-      "cookie",
-      "x-api-key",
-      "x-auth-token",
-      "x-session-token",
-    ],
-    redactHeaders: userOptions.redactHeaders ?? userOptions.redactedHeaders ?? [
-      "authorization",
-      "cookie",
-      "x-api-key",
-      "x-auth-token",
-      "x-session-token",
-    ],
-    redactedQueryParams: userOptions.redactedQueryParams ?? userOptions.redactQueryParams ?? [
-      "token",
-      "key",
-      "secret",
-      "password",
-    ],
-    redactQueryParams: userOptions.redactQueryParams ?? userOptions.redactedQueryParams ?? [
-      "token",
-      "key",
-      "secret",
-      "password",
-    ],
-    redactedBodyFields: userOptions.redactedBodyFields ?? userOptions.redactBodyFields ?? [
-      "password",
-      "token",
-      "secret",
-      "key",
-      "ssn",
-      "credit_card",
-    ],
-    redactBodyFields: userOptions.redactBodyFields ?? userOptions.redactedBodyFields ?? [
-      "password",
-      "token",
-      "secret",
-      "key",
-      "ssn",
-      "credit_card",
-    ],
+    redactedHeaders: userOptions.redactedHeaders ??
+      userOptions.redactHeaders ?? [
+        "authorization",
+        "cookie",
+        "x-api-key",
+        "x-auth-token",
+        "x-session-token",
+      ],
+    redactHeaders: userOptions.redactHeaders ??
+      userOptions.redactedHeaders ?? [
+        "authorization",
+        "cookie",
+        "x-api-key",
+        "x-auth-token",
+        "x-session-token",
+      ],
+    redactedQueryParams: userOptions.redactedQueryParams ??
+      userOptions.redactQueryParams ?? ["token", "key", "secret", "password"],
+    redactQueryParams: userOptions.redactQueryParams ??
+      userOptions.redactedQueryParams ?? ["token", "key", "secret", "password"],
+    redactedBodyFields: userOptions.redactedBodyFields ??
+      userOptions.redactBodyFields ?? ["password", "token", "secret", "key", "ssn", "credit_card"],
+    redactBodyFields: userOptions.redactBodyFields ??
+      userOptions.redactedBodyFields ?? [
+        "password",
+        "token",
+        "secret",
+        "key",
+        "ssn",
+        "credit_card",
+      ],
   };
-} 
+}

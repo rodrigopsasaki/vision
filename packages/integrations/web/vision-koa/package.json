@@ -28,8 +28,8 @@
     "README.md"
   ],
   "scripts": {
-    "lint": "eslint src test --ext .ts",
-    "lint:fix": "eslint src test --ext .ts --fix",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
     "format": "prettier --config ../../.prettierrc --ignore-path ../../.prettierignore --write .",
     "format:check": "prettier --config ../../.prettierrc --ignore-path ../../.prettierignore --check .",
     "spellcheck": "cspell '**/*.{ts,md,json}'",

@@ -13,20 +13,20 @@ describe("Normalization Integration", () => {
     },
     error: (ctx) => {
       capturedContexts.push(ctx);
-    }
+    },
   };
 
   beforeEach(() => {
     capturedContexts = [];
-    
+
     // Reset vision runtime to clean state
     vision.init({
       exporters: [testExporter],
       normalization: {
         enabled: false,
         keyCasing: "none",
-        deep: true
-      }
+        deep: true,
+      },
     });
   });
 
@@ -37,16 +37,16 @@ describe("Normalization Integration", () => {
         normalization: {
           enabled: false,
           keyCasing: "snake_case",
-          deep: true
-        }
+          deep: true,
+        },
       });
 
       await vision.observe("test.operation", async () => {
         vision.set("userId", "123");
         vision.set("firstName", "John");
-        vision.merge("userProfile", { 
+        vision.merge("userProfile", {
           lastName: "Doe",
-          contactInfo: { emailAddress: "john@example.com" }
+          contactInfo: { emailAddress: "john@example.com" },
         });
       });
 
@@ -71,8 +71,8 @@ describe("Normalization Integration", () => {
         normalization: {
           enabled: true,
           keyCasing: "snake_case",
-          deep: true
-        }
+          deep: true,
+        },
       });
     });
 
@@ -89,7 +89,7 @@ describe("Normalization Integration", () => {
       expect(context.data.get("user_id")).toBe("123");
       expect(context.data.get("first_name")).toBe("John");
       expect(context.data.get("is_active")).toBe(true);
-      
+
       // Original keys should not exist
       expect(context.data.get("userId")).toBeUndefined();
       expect(context.data.get("firstName")).toBeUndefined();
@@ -103,8 +103,8 @@ describe("Normalization Integration", () => {
           lastName: "Doe",
           personalInfo: {
             birthDate: "1990-01-01",
-            phoneNumber: "555-1234"
-          }
+            phoneNumber: "555-1234",
+          },
         });
       });
 
@@ -135,13 +135,13 @@ describe("Normalization Integration", () => {
 
     it("should work with merge operations", async () => {
       await vision.observe("test.operation", async () => {
-        vision.merge("requestData", { 
+        vision.merge("requestData", {
           httpMethod: "POST",
-          requestPath: "/api/users"
+          requestPath: "/api/users",
         });
         vision.merge("requestData", {
           responseCode: 200,
-          processingTime: 150
+          processingTime: 150,
         });
       });
 
@@ -155,19 +155,22 @@ describe("Normalization Integration", () => {
     });
 
     it("should handle initial context data", async () => {
-      await vision.observe({
-        name: "test.operation",
-        initial: {
-          requestId: "req-123",
-          userAgent: "test-agent",
-          clientInfo: {
-            ipAddress: "127.0.0.1",
-            browserType: "chrome"
-          }
-        }
-      }, async () => {
-        vision.set("processedAt", Date.now());
-      });
+      await vision.observe(
+        {
+          name: "test.operation",
+          initial: {
+            requestId: "req-123",
+            userAgent: "test-agent",
+            clientInfo: {
+              ipAddress: "127.0.0.1",
+              browserType: "chrome",
+            },
+          },
+        },
+        async () => {
+          vision.set("processedAt", Date.now());
+        },
+      );
 
       const context = capturedContexts[0];
 
@@ -188,8 +191,8 @@ describe("Normalization Integration", () => {
         normalization: {
           enabled: true,
           keyCasing: "camelCase",
-          deep: true
-        }
+          deep: true,
+        },
       });
     });
 
@@ -215,8 +218,8 @@ describe("Normalization Integration", () => {
         normalization: {
           enabled: true,
           keyCasing: "snake_case",
-          deep: false
-        }
+          deep: false,
+        },
       });
     });
 
@@ -227,8 +230,8 @@ describe("Normalization Integration", () => {
           lastName: "Doe",
           address: {
             streetName: "Main St",
-            cityName: "Boston"
-          }
+            cityName: "Boston",
+          },
         });
       });
 
@@ -258,8 +261,8 @@ describe("Normalization Integration", () => {
         normalization: {
           enabled: true,
           keyCasing: "snake_case",
-          deep: true
-        }
+          deep: true,
+        },
       });
     });
 
@@ -291,12 +294,12 @@ describe("Normalization Integration", () => {
 
       const exporter1: VisionExporter = {
         name: "exporter-1",
-        success: (ctx) => capturedContexts1.push(ctx)
+        success: (ctx) => capturedContexts1.push(ctx),
       };
 
       const exporter2: VisionExporter = {
-        name: "exporter-2", 
-        success: (ctx) => capturedContexts2.push(ctx)
+        name: "exporter-2",
+        success: (ctx) => capturedContexts2.push(ctx),
       };
 
       vision.init({
@@ -304,8 +307,8 @@ describe("Normalization Integration", () => {
         normalization: {
           enabled: true,
           keyCasing: "snake_case",
-          deep: true
-        }
+          deep: true,
+        },
       });
 
       await vision.observe("test.operation", async () => {
@@ -327,8 +330,8 @@ describe("Normalization Integration", () => {
         normalization: {
           enabled: true,
           keyCasing: "snake_case",
-          deep: true
-        }
+          deep: true,
+        },
       });
 
       const largeDataset = Array.from({ length: 1000 }, (_, i) => ({
@@ -338,8 +341,8 @@ describe("Normalization Integration", () => {
         metadata: {
           createdAt: new Date().toISOString(),
           isActive: i % 2 === 0,
-          loginCount: i * 10
-        }
+          loginCount: i * 10,
+        },
       }));
 
       const startTime = Date.now();
@@ -357,7 +360,7 @@ describe("Normalization Integration", () => {
 
       const context = capturedContexts[0];
       const userList = context.data.get("large_user_list") as any[];
-      
+
       expect(userList).toHaveLength(1000);
       expect(userList[0].user_id).toBe("user-0");
       expect(userList[0].first_name).toBe("FirstName0");

@@ -1,16 +1,17 @@
-import { vision } from "@rodrigopsasaki/vision";
-import type { DynamicModule, FactoryProvider, ModuleMetadata, Provider, Type } from "@nestjs/common";
+import type {
+  DynamicModule,
+  ModuleMetadata,
+  Provider,
+  Type,
+} from "@nestjs/common";
 import { Global, Module } from "@nestjs/common";
 import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
+import { vision } from "@rodrigopsasaki/vision";
 
 import { VisionGuard } from "./guard";
 import { VisionInterceptor } from "./interceptor";
 import { VisionService } from "./service";
-import {
-  VISION_NESTJS_OPTIONS,
-  VISION_SERVICE,
-  type VisionNestJSOptions,
-} from "./types";
+import { VISION_NESTJS_OPTIONS, VISION_SERVICE, type VisionNestJSOptions } from "./types";
 
 /**
  * Interface for configuring Vision module asynchronously.
@@ -52,13 +53,13 @@ export interface VisionOptionsFactory {
 
 /**
  * Vision module for NestJS applications.
- * 
+ *
  * This module provides comprehensive Vision integration with:
  * - Automatic interceptor registration
  * - Optional guard integration for enhanced security
  * - Injectable Vision service for manual context manipulation
  * - Support for dynamic configuration with async factories
- * 
+ *
  * @example
  * ```typescript
  * // Basic usage
@@ -75,7 +76,7 @@ export interface VisionOptionsFactory {
  *   ],
  * })
  * export class AppModule {}
- * 
+ *
  * // Async configuration
  * @Module({
  *   imports: [
@@ -98,7 +99,7 @@ export interface VisionOptionsFactory {
 export class VisionModule {
   /**
    * Configures Vision module with static options.
-   * 
+   *
    * @param options - Vision configuration options
    * @param withGuard - Whether to enable the optional Vision guard for enhanced security
    * @returns Dynamic module configuration
@@ -138,14 +139,14 @@ export class VisionModule {
 
   /**
    * Configures Vision module with async options.
-   * 
+   *
    * @param options - Async configuration options
    * @param withGuard - Whether to enable the optional Vision guard for enhanced security
    * @returns Dynamic module configuration
    */
   static forRootAsync(options: VisionModuleAsyncOptions, withGuard = false): DynamicModule {
     const asyncProviders = this.createAsyncProviders(options);
-    
+
     const providers: Provider[] = [
       ...asyncProviders,
       {
@@ -179,7 +180,7 @@ export class VisionModule {
   /**
    * Creates a feature module that can be imported into specific modules.
    * This is useful when you want Vision only in certain parts of your application.
-   * 
+   *
    * @param options - Vision configuration options
    * @returns Dynamic module configuration
    */
@@ -204,7 +205,7 @@ export class VisionModule {
 
   /**
    * Creates a testing module with Vision configured for test environments.
-   * 
+   *
    * @param options - Test-specific Vision options
    * @returns Dynamic module configuration
    */

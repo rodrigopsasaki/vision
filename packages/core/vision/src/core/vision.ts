@@ -3,7 +3,15 @@ import { fanOutToExporters } from "../exporters/fanOut";
 import { generateId } from "../utils/generateId";
 import { normalizeContext } from "../utils/normalizeContext";
 
-import { visionSet, visionGet, visionPush, visionMerge, getContext } from "./context";
+import {
+  visionSet,
+  visionGet,
+  visionPush,
+  visionMerge,
+  visionError,
+  visionException,
+  getContext,
+} from "./context";
 import { getContextStore, getRuntimeState, initVisionRuntime } from "./global";
 import type { VisionContext, VisionInitOptions } from "./types";
 
@@ -280,4 +288,43 @@ export const vision = {
    * ```
    */
   context: getContext,
+
+  /**
+   * Captures an error in the current vision context with proper serialization.
+   *
+   * This ensures that errors are always captured meaningfully, regardless of
+   * what was thrown. Handles Error instances, strings, objects, and even primitives.
+   *
+   * @param error - Any error value (Error, string, object, etc.)
+   * @param metadata - Optional metadata about the error
+   *
+   * @example
+   * ```typescript
+   * try {
+   *   await riskyOperation();
+   * } catch (err) {
+   *   vision.error(err, { operation: "riskyOperation", fatal: false });
+   * }
+   * ```
+   */
+  error: visionError,
+
+  /**
+   * Captures an exception in the current vision context.
+   * Similar to error() but with fatal=true by default.
+   *
+   * @param exception - Any thrown value
+   * @param metadata - Optional metadata about the exception
+   *
+   * @example
+   * ```typescript
+   * try {
+   *   await criticalOperation();
+   * } catch (ex) {
+   *   vision.exception(ex, { operation: "criticalOperation" });
+   *   throw ex; // Re-throw if needed
+   * }
+   * ```
+   */
+  exception: visionException,
 };

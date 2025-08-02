@@ -4,7 +4,6 @@ import { describe, test, expect, vi, beforeEach } from "vitest";
 
 import { createVisionMiddleware } from "../src/middleware";
 
-
 describe("createVisionMiddleware", () => {
   let mockExporter: VisionExporter;
 
@@ -33,9 +32,9 @@ describe("createVisionMiddleware", () => {
     expect(typeof middleware).toBe("function");
   });
 
-  test("creates simple middleware", async () => {
-    const { createSimpleVisionMiddleware } = await import("../src/middleware");
-    const middleware = createSimpleVisionMiddleware();
+  test("creates minimal middleware", async () => {
+    const { createMinimalVisionMiddleware } = await import("../src/middleware");
+    const middleware = createMinimalVisionMiddleware();
     expect(typeof middleware).toBe("function");
   });
 
@@ -44,4 +43,4 @@ describe("createVisionMiddleware", () => {
     const middleware = createComprehensiveVisionMiddleware();
     expect(typeof middleware).toBe("function");
   });
-}); 
+});

@@ -37,27 +37,27 @@ app.get("/users/:id", async (req, res) => {
   // Add custom data to the context
   vision.set("user_id", req.params.id);
   vision.set("operation", "get_user");
-  
+
   // Simulate some work
-  await new Promise(resolve => setTimeout(resolve, 100));
-  
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
   // Add more context data
   vision.set("result_count", 1);
   vision.merge("metadata", {
     service: "user-service",
     version: "1.0.0",
   });
-  
+
   res.json({ id: req.params.id, name: "John Doe" });
 });
 
 app.post("/users", async (req, res) => {
   vision.set("operation", "create_user");
   vision.set("user_data", req.body);
-  
+
   // Simulate database operation
-  await new Promise(resolve => setTimeout(resolve, 200));
-  
+  await new Promise((resolve) => setTimeout(resolve, 200));
+
   res.status(201).json({ id: "new-user-123", ...req.body });
 });
 
@@ -69,7 +69,7 @@ app.get("/health", (req, res) => {
 // Error handling example
 app.get("/error", (req, res) => {
   vision.set("operation", "trigger_error");
-  
+
   // This error will be captured by Vision
   throw new Error("Something went wrong!");
 });
@@ -85,4 +85,4 @@ app.listen(PORT, () => {
   console.log(`  POST http://localhost:${PORT}/users (with JSON body)`);
   console.log(`  GET  http://localhost:${PORT}/error`);
   console.log(`  GET  http://localhost:${PORT}/health (excluded from tracking)`);
-}); 
+});

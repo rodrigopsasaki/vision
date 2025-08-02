@@ -278,7 +278,7 @@ describe("safeSerializeParams", () => {
 
   it("should handle special types", () => {
     const params = {
-      func: function() {},
+      func: function () {},
       sym: Symbol("test"),
       big: BigInt(123),
       date: new Date("2023-01-01"),

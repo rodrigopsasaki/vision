@@ -1,16 +1,23 @@
 /**
  * Microservice Vision TypeORM Integration Example
- * 
+ *
  * This example demonstrates how to use Vision TypeORM integration in a
  * microservice architecture with distributed tracing and correlation IDs.
  */
 
-import { DataSource, Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm";
+import {
+  DataSource,
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from "typeorm";
 import { vision } from "@rodrigopsasaki/vision";
-import { 
+import {
   instrumentDataSource,
   visionTransaction,
-  type VisionTypeOrmConfig 
+  type VisionTypeOrmConfig,
 } from "@rodrigopsasaki/vision-typeorm";
 
 // Domain entities for different microservices
@@ -118,7 +125,7 @@ class CorrelationContext {
   static withCorrelationId<T>(id: string, fn: () => Promise<T>): Promise<T> {
     const previousId = this.currentId;
     this.currentId = id;
-    
+
     return fn().finally(() => {
       this.currentId = previousId;
     });
@@ -131,14 +138,14 @@ class CustomerService {
 
   async createCustomer(customerData: Partial<Customer>): Promise<Customer> {
     const correlationId = CorrelationContext.getCorrelationId();
-    
+
     return vision.observe("customer.create", async () => {
       vision.set("correlation_id", correlationId);
       vision.set("service", "customer-service");
       vision.set("operation_type", "create");
 
       const customerRepository = this.dataSource.getRepository(Customer);
-      
+
       const customer = await customerRepository.save({
         ...customerData,
         status: "active",
@@ -154,7 +161,7 @@ class CustomerService {
 
   async getCustomer(customerId: string): Promise<Customer | null> {
     const correlationId = CorrelationContext.getCorrelationId();
-    
+
     return vision.observe("customer.get", async () => {
       vision.set("correlation_id", correlationId);
       vision.set("service", "customer-service");
@@ -174,7 +181,7 @@ class CustomerService {
 
   async updateCustomerStatus(customerId: string, status: string): Promise<void> {
     const correlationId = CorrelationContext.getCorrelationId();
-    
+
     return vision.observe("customer.update_status", async () => {
       vision.set("correlation_id", correlationId);
       vision.set("service", "customer-service");
@@ -182,8 +189,8 @@ class CustomerService {
       vision.set("new_status", status);
 
       const customerRepository = this.dataSource.getRepository(Customer);
-      
-      const result = await customerRepository.update(customerId, { 
+
+      const result = await customerRepository.update(customerId, {
         status,
         updatedAt: new Date(),
       });
@@ -203,43 +210,48 @@ class OrderService {
     items: Array<{ productId: string; quantity: number; price: number }>;
   }): Promise<Order> {
     const correlationId = CorrelationContext.getCorrelationId();
-    
-    return visionTransaction(this.dataSource, async (manager) => {
-      vision.set("correlation_id", correlationId);
-      vision.set("service", "order-service");
-      vision.set("operation_type", "create_order");
-      vision.set("customer_id", orderData.customerId);
 
-      const orderRepository = manager.getRepository(Order);
-      
-      // Calculate total amount
-      const totalAmount = orderData.items.reduce((sum, item) => 
-        sum + (item.quantity * item.price), 0
-      );
+    return visionTransaction(
+      this.dataSource,
+      async (manager) => {
+        vision.set("correlation_id", correlationId);
+        vision.set("service", "order-service");
+        vision.set("operation_type", "create_order");
+        vision.set("customer_id", orderData.customerId);
 
-      const order = await orderRepository.save({
-        customerId: orderData.customerId,
-        totalAmount,
-        status: "pending",
-        metadata: {
-          items: orderData.items,
-          itemCount: orderData.items.length,
-          correlationId,
-        },
-      });
+        const orderRepository = manager.getRepository(Order);
 
-      vision.set("order_id", order.id);
-      vision.set("total_amount", totalAmount);
-      vision.set("item_count", orderData.items.length);
-      vision.set("order_status", "pending");
+        // Calculate total amount
+        const totalAmount = orderData.items.reduce(
+          (sum, item) => sum + item.quantity * item.price,
+          0,
+        );
 
-      return order;
-    }, microserviceConfig);
+        const order = await orderRepository.save({
+          customerId: orderData.customerId,
+          totalAmount,
+          status: "pending",
+          metadata: {
+            items: orderData.items,
+            itemCount: orderData.items.length,
+            correlationId,
+          },
+        });
+
+        vision.set("order_id", order.id);
+        vision.set("total_amount", totalAmount);
+        vision.set("item_count", orderData.items.length);
+        vision.set("order_status", "pending");
+
+        return order;
+      },
+      microserviceConfig,
+    );
   }
 
   async updateOrderStatus(orderId: string, status: string): Promise<void> {
     const correlationId = CorrelationContext.getCorrelationId();
-    
+
     return vision.observe("order.update_status", async () => {
       vision.set("correlation_id", correlationId);
       vision.set("service", "order-service");
@@ -247,8 +259,8 @@ class OrderService {
       vision.set("new_status", status);
 
       const orderRepository = this.dataSource.getRepository(Order);
-      
-      const result = await orderRepository.update(orderId, { 
+
+      const result = await orderRepository.update(orderId, {
         status,
         updatedAt: new Date(),
       });
@@ -259,14 +271,14 @@ class OrderService {
 
   async getOrdersByCustomer(customerId: string): Promise<Order[]> {
     const correlationId = CorrelationContext.getCorrelationId();
-    
+
     return vision.observe("order.get_by_customer", async () => {
       vision.set("correlation_id", correlationId);
       vision.set("service", "order-service");
       vision.set("customer_id", customerId);
 
       const orderRepository = this.dataSource.getRepository(Order);
-      
+
       const orders = await orderRepository.find({
         where: { customerId },
         order: { createdAt: "DESC" },
@@ -275,7 +287,10 @@ class OrderService {
       vision.set("order_count", orders.length);
       if (orders.length > 0) {
         vision.set("latest_order_status", orders[0].status);
-        vision.set("total_order_value", orders.reduce((sum, o) => sum + Number(o.totalAmount), 0));
+        vision.set(
+          "total_order_value",
+          orders.reduce((sum, o) => sum + Number(o.totalAmount), 0),
+        );
       }
 
       return orders;
@@ -293,65 +308,70 @@ class PaymentService {
     method: string;
   }): Promise<Payment> {
     const correlationId = CorrelationContext.getCorrelationId();
-    
-    return visionTransaction(this.dataSource, async (manager) => {
-      vision.set("correlation_id", correlationId);
-      vision.set("service", "payment-service");
-      vision.set("operation_type", "process_payment");
-      vision.set("order_id", paymentData.orderId);
-      vision.set("payment_method", paymentData.method);
-      vision.set("payment_amount", paymentData.amount);
 
-      const paymentRepository = manager.getRepository(Payment);
-      
-      // Simulate external payment processing
-      const externalTransactionId = `txn_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`;
-      
-      try {
-        // Simulate payment gateway call
-        await this.simulatePaymentGateway(paymentData, externalTransactionId);
-        
-        const payment = await paymentRepository.save({
-          orderId: paymentData.orderId,
-          amount: paymentData.amount,
-          method: paymentData.method,
-          status: "completed",
-          externalTransactionId,
-        });
+    return visionTransaction(
+      this.dataSource,
+      async (manager) => {
+        vision.set("correlation_id", correlationId);
+        vision.set("service", "payment-service");
+        vision.set("operation_type", "process_payment");
+        vision.set("order_id", paymentData.orderId);
+        vision.set("payment_method", paymentData.method);
+        vision.set("payment_amount", paymentData.amount);
 
-        vision.set("payment_id", payment.id);
-        vision.set("external_transaction_id", externalTransactionId);
-        vision.set("payment_status", "completed");
-        vision.set("payment_successful", true);
+        const paymentRepository = manager.getRepository(Payment);
 
-        return payment;
-      } catch (error) {
-        // Record failed payment
-        const payment = await paymentRepository.save({
-          orderId: paymentData.orderId,
-          amount: paymentData.amount,
-          method: paymentData.method,
-          status: "failed",
-          externalTransactionId,
-        });
+        // Simulate external payment processing
+        const externalTransactionId = `txn_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`;
 
-        vision.set("payment_id", payment.id);
-        vision.set("external_transaction_id", externalTransactionId);
-        vision.set("payment_status", "failed");
-        vision.set("payment_successful", false);
-        vision.set("failure_reason", error instanceof Error ? error.message : "unknown");
+        try {
+          // Simulate payment gateway call
+          await this.simulatePaymentGateway(paymentData, externalTransactionId);
 
-        throw error;
-      }
-    }, microserviceConfig);
+          const payment = await paymentRepository.save({
+            orderId: paymentData.orderId,
+            amount: paymentData.amount,
+            method: paymentData.method,
+            status: "completed",
+            externalTransactionId,
+          });
+
+          vision.set("payment_id", payment.id);
+          vision.set("external_transaction_id", externalTransactionId);
+          vision.set("payment_status", "completed");
+          vision.set("payment_successful", true);
+
+          return payment;
+        } catch (error) {
+          // Record failed payment
+          const payment = await paymentRepository.save({
+            orderId: paymentData.orderId,
+            amount: paymentData.amount,
+            method: paymentData.method,
+            status: "failed",
+            externalTransactionId,
+          });
+
+          vision.set("payment_id", payment.id);
+          vision.set("external_transaction_id", externalTransactionId);
+          vision.set("payment_status", "failed");
+          vision.set("payment_successful", false);
+          vision.set("failure_reason", error instanceof Error ? error.message : "unknown");
+
+          throw error;
+        }
+      },
+      microserviceConfig,
+    );
   }
 
   private async simulatePaymentGateway(paymentData: any, transactionId: string): Promise<void> {
     // Simulate network latency
-    await new Promise(resolve => setTimeout(resolve, Math.random() * 100 + 50));
-    
+    await new Promise((resolve) => setTimeout(resolve, Math.random() * 100 + 50));
+
     // Simulate occasional failures
-    if (Math.random() < 0.1) { // 10% failure rate
+    if (Math.random() < 0.1) {
+      // 10% failure rate
       throw new Error("Payment gateway timeout");
     }
   }
@@ -362,7 +382,7 @@ class OrderOrchestrator {
   constructor(
     private customerService: CustomerService,
     private orderService: OrderService,
-    private paymentService: PaymentService
+    private paymentService: PaymentService,
   ) {}
 
   async processOrderWorkflow(orderRequest: {
@@ -372,7 +392,7 @@ class OrderOrchestrator {
     paymentMethod: string;
   }): Promise<{ orderId: string; paymentId: string }> {
     const correlationId = CorrelationContext.generateId();
-    
+
     return CorrelationContext.withCorrelationId(correlationId, async () => {
       return vision.observe("workflow.process_order", async () => {
         vision.set("correlation_id", correlationId);
@@ -425,7 +445,6 @@ class OrderOrchestrator {
             orderId: order.id,
             paymentId: payment.id,
           };
-
         } catch (error) {
           vision.set("workflow_status", "failed");
           vision.set("error_message", error instanceof Error ? error.message : "unknown");
@@ -497,18 +516,18 @@ async function microserviceExample() {
           const correlationId = ctx.data.get("correlation_id");
           const service = ctx.data.get("service");
           const operation = ctx.data.get("database.operation") || ctx.name;
-          
+
           console.log(`[${correlationId}] ${service}: ${operation} completed successfully`);
         },
         error: (ctx, err) => {
           const correlationId = ctx.data.get("correlation_id");
           const service = ctx.data.get("service");
           const operation = ctx.data.get("database.operation") || ctx.name;
-          
+
           console.error(`[${correlationId}] ${service}: ${operation} failed:`, err);
-        }
-      }
-    ]
+        },
+      },
+    ],
   });
 
   // Process complete order workflow
@@ -518,7 +537,7 @@ async function microserviceExample() {
       customerName: "Alice Johnson",
       items: [
         { productId: "prod_1", quantity: 2, price: 29.99 },
-        { productId: "prod_2", quantity: 1, price: 15.50 },
+        { productId: "prod_2", quantity: 1, price: 15.5 },
       ],
       paymentMethod: "credit_card",
     });
@@ -538,12 +557,12 @@ async function microserviceExample() {
 
 /**
  * Microservice output with correlation tracking:
- * 
+ *
  * [req_1642234567890_abc123def] customer-service: customer.create completed successfully
  * [req_1642234567890_abc123def] order-service: db.transaction completed successfully
  * [req_1642234567890_abc123def] payment-service: db.transaction completed successfully
  * [req_1642234567890_abc123def] order-orchestrator: workflow.process_order completed successfully
- * 
+ *
  * Structured event with full context:
  * {
  *   "name": "workflow.process_order",
