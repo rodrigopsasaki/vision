@@ -430,7 +430,7 @@ export function instrumentQueryRunner(
           if (method === "query" && args.length > 0 && typeof args[0] === "string") {
             const query = truncateQuery(args[0], finalConfig.maxQueryLength);
             vision.set("database.query", query);
-            
+
             if (args.length > 1 && finalConfig.logParams) {
               const params = redactSensitiveData(args[1], finalConfig.redactFields);
               vision.set("database.query_params", params);

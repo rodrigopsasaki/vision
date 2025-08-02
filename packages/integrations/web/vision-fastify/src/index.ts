@@ -17,9 +17,7 @@ export type {
   ErrorMetadata,
 } from "./types";
 
-export {
-  DEFAULT_VISION_FASTIFY_OPTIONS,
-} from "./types";
+export { DEFAULT_VISION_FASTIFY_OPTIONS } from "./types";
 
 // Utilities
 export {

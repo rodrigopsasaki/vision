@@ -1,3 +1,5 @@
+import { serializeError, isErrorLike } from "../utils/errorCapture";
+
 import { getContextStore } from "./global";
 import type { VisionContext } from "./types";
 
@@ -34,6 +36,9 @@ export function getContext(): VisionContext {
  * This is the primary method for storing data in the current vision context.
  * The data will be automatically exported when the context completes.
  *
+ * Automatically detects and normalizes error-like values to ensure they're
+ * properly captured instead of serializing to empty objects.
+ *
  * @param key - The key to store the value under
  * @param value - The value to store (can be any type)
  *
@@ -47,7 +52,12 @@ export function getContext(): VisionContext {
  * ```
  */
 export function visionSet<K extends string, V = unknown>(key: K, value: V): void {
-  getContext().data.set(key, value);
+  // Intelligently handle error-like values
+  if (isErrorLike(value)) {
+    getContext().data.set(key, serializeError(value));
+  } else {
+    getContext().data.set(key, value);
+  }
 }
 
 /**
@@ -125,4 +135,92 @@ export function visionPush<T = unknown>(key: string, value: T): void {
 export function visionMerge<K extends string, V = unknown>(key: K, value: Record<string, V>): void {
   const existing = (getContext().data.get(key) as Record<string, V> | undefined) ?? {};
   getContext().data.set(key, { ...existing, ...value });
+}
+
+/**
+ * Captures an error in the current vision context with proper serialization.
+ *
+ * This ensures that errors are always captured meaningfully, regardless of
+ * what was thrown. Handles Error instances, strings, objects, and even primitives.
+ *
+ * @param error - Any error value (Error, string, object, etc.)
+ * @param metadata - Optional metadata about the error
+ *
+ * @example
+ * ```typescript
+ * await vision.observe("user.action", async () => {
+ *   try {
+ *     await riskyOperation();
+ *   } catch (err) {
+ *     visionError(err, { operation: "riskyOperation", fatal: false });
+ *     // Handle the error...
+ *   }
+ * });
+ * ```
+ */
+export function visionError(
+  error: unknown,
+  metadata?: {
+    fatal?: boolean;
+    handled?: boolean;
+    operation?: string;
+    [key: string]: unknown;
+  },
+): void {
+  const serialized = serializeError(error);
+
+  // Store the main error
+  getContext().data.set("error", serialized);
+
+  // Store error metadata
+  if (metadata) {
+    const { fatal = false, handled = true, operation, ...rest } = metadata;
+
+    getContext().data.set("error.fatal", fatal);
+    getContext().data.set("error.handled", handled);
+
+    if (operation) {
+      getContext().data.set("error.operation", operation);
+    }
+
+    if (Object.keys(rest).length > 0) {
+      getContext().data.set("error.metadata", rest);
+    }
+  } else {
+    // Default metadata
+    getContext().data.set("error.fatal", false);
+    getContext().data.set("error.handled", true);
+  }
+
+  getContext().data.set("error.timestamp", new Date().toISOString());
+}
+
+/**
+ * Captures an exception in the current vision context.
+ * Alias for visionError with fatal=true by default.
+ *
+ * @param exception - Any thrown value
+ * @param metadata - Optional metadata about the exception
+ *
+ * @example
+ * ```typescript
+ * await vision.observe("critical.operation", async () => {
+ *   try {
+ *     await criticalOperation();
+ *   } catch (ex) {
+ *     visionException(ex, { operation: "criticalOperation" });
+ *     throw ex; // Re-throw if needed
+ *   }
+ * });
+ * ```
+ */
+export function visionException(
+  exception: unknown,
+  metadata?: {
+    handled?: boolean;
+    operation?: string;
+    [key: string]: unknown;
+  },
+): void {
+  visionError(exception, { ...metadata, fatal: true });
 }

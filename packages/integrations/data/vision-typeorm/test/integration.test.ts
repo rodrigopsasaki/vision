@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { DataSource } from "typeorm";
-import { 
-  instrumentDataSource, 
-  visionTransaction, 
+import {
+  instrumentDataSource,
+  visionTransaction,
   VisionInstrumented,
   VisionObserve,
 } from "../src/index";
@@ -45,7 +45,7 @@ describe("Integration Tests", () => {
       const user = await userRepository.save({
         name: "John Doe",
         email: "john@example.com",
-        password: "secret123"
+        password: "secret123",
       });
 
       // Create posts for the user
@@ -57,14 +57,14 @@ describe("Integration Tests", () => {
       });
 
       const post2 = await postRepository.save({
-        title: "Second Post", 
+        title: "Second Post",
         content: "This is my second post",
         userId: user.id,
       });
 
       // Find all posts by user
       const userPosts = await postRepository.find({
-        where: { userId: user.id }
+        where: { userId: user.id },
       });
 
       // Find user with count
@@ -86,32 +86,31 @@ describe("Integration Tests", () => {
 
     // Verify Vision captured the transaction
     const calls = mockVision.getObserveCalls();
-    const transactionCall = calls.find(call => call.name === "db.transaction");
-    
+    const transactionCall = calls.find((call) => call.name === "db.transaction");
+
     expect(transactionCall).toBeDefined();
     expect(transactionCall?.data.get("database.operation")).toBe("transaction");
     expect(transactionCall?.data.get("database.success")).toBe(true);
     expect(typeof transactionCall?.data.get("database.query_count")).toBe("number");
 
     // Verify individual repository operations were captured
-    const saveUserCall = calls.find(call => call.name === "db.testuser.save");
+    const saveUserCall = calls.find((call) => call.name === "db.testuser.save");
     expect(saveUserCall).toBeDefined();
     expect(saveUserCall?.data.get("database.entity")).toBe("TestUser");
 
-    const savePostCalls = calls.filter(call => call.name === "db.testpost.save");
+    const savePostCalls = calls.filter((call) => call.name === "db.testpost.save");
     expect(savePostCalls).toHaveLength(2);
 
-    const findPostsCall = calls.find(call => call.name === "db.testpost.find");
+    const findPostsCall = calls.find((call) => call.name === "db.testpost.find");
     expect(findPostsCall).toBeDefined();
     expect(findPostsCall?.data.get("database.result_count")).toBe(2);
 
-    const countUsersCall = calls.find(call => call.name === "db.testuser.find");
+    const countUsersCall = calls.find((call) => call.name === "db.testuser.find");
     expect(countUsersCall).toBeDefined();
 
     // Verify sensitive data was redacted
-    const userSaveCall = calls.find(call => 
-      call.name === "db.testuser.save" && 
-      call.data.get("database.params")
+    const userSaveCall = calls.find(
+      (call) => call.name === "db.testuser.save" && call.data.get("database.params"),
     );
     if (userSaveCall) {
       const params = userSaveCall.data.get("database.params") as any;
@@ -126,7 +125,7 @@ describe("Integration Tests", () => {
     await expect(
       visionTransaction(instrumentedDataSource, async (manager) => {
         const userRepository = manager.getRepository(TestUser);
-        
+
         // This should work
         await userRepository.save({
           name: "Valid User",
@@ -136,19 +135,19 @@ describe("Integration Tests", () => {
         // This should fail due to constraint violation (if we had unique constraints)
         // For this test, we'll just throw a manual error
         throw new Error("Simulated database error");
-      })
+      }),
     ).rejects.toThrow("Simulated database error");
 
     // Verify error was captured in transaction
     const calls = mockVision.getObserveCalls();
-    const transactionCall = calls.find(call => call.name === "db.transaction");
-    
+    const transactionCall = calls.find((call) => call.name === "db.transaction");
+
     expect(transactionCall).toBeDefined();
     expect(transactionCall?.data.get("database.success")).toBe(false);
     expect(transactionCall?.data.get("database.error")).toBe("Simulated database error");
-    
+
     // But the successful save should still be captured
-    const saveCall = calls.find(call => call.name === "db.testuser.save");
+    const saveCall = calls.find((call) => call.name === "db.testuser.save");
     expect(saveCall).toBeDefined();
     expect(saveCall?.data.get("database.success")).toBe(true);
   });
@@ -186,7 +185,7 @@ describe("Integration Tests", () => {
       });
 
       const foundUser = await userService.findUserByEmail("service@example.com");
-      
+
       expect(user).toBeDefined();
       expect(foundUser).toBeDefined();
       expect(foundUser?.email).toBe("service@example.com");
@@ -194,10 +193,10 @@ describe("Integration Tests", () => {
 
     // Check that decorator instrumentation worked
     const calls = mockVision.getObserveCalls();
-    const createUserCall = calls.find(call => call.name === "db.userservice.operation");
+    const createUserCall = calls.find((call) => call.name === "db.userservice.operation");
     expect(createUserCall).toBeDefined();
 
-    const findUserCall = calls.find(call => call.name === "db.userservice.operation");
+    const findUserCall = calls.find((call) => call.name === "db.userservice.operation");
     expect(findUserCall).toBeDefined();
 
     // Test non-instrumented method
@@ -213,7 +212,7 @@ describe("Integration Tests", () => {
 
     await mockVision.observe("complex-queries", async () => {
       const userRepository = instrumentedDataSource.getRepository(TestUser);
-      
+
       // Save some test data first
       await userRepository.save([
         { name: "Alice", email: "alice@example.com" },
@@ -236,30 +235,28 @@ describe("Integration Tests", () => {
 
       // Test findAndCount
       const [foundUsers, totalCount] = await userRepository.findAndCount({
-        order: { name: "ASC" }
+        order: { name: "ASC" },
       });
-      
+
       expect(foundUsers).toHaveLength(3);
       expect(totalCount).toBe(3);
     });
 
     const calls = mockVision.getObserveCalls();
-    
+
     // Should have captured the bulk save
-    const saveCall = calls.find(call => call.name === "db.testuser.save");
+    const saveCall = calls.find((call) => call.name === "db.testuser.save");
     expect(saveCall).toBeDefined();
 
     // Should have captured the query builder operation
-    const queryBuilderCall = calls.find(call => 
-      call.name === "db.testuser.query" || 
-      call.name === "db.testuser.operation"
+    const queryBuilderCall = calls.find(
+      (call) => call.name === "db.testuser.query" || call.name === "db.testuser.operation",
     );
     expect(queryBuilderCall).toBeDefined();
 
     // Should have captured count operations
-    const countCalls = calls.filter(call => 
-      call.name === "db.testuser.find" ||
-      call.name === "db.testuser.operation"
+    const countCalls = calls.filter(
+      (call) => call.name === "db.testuser.find" || call.name === "db.testuser.operation",
     );
     expect(countCalls.length).toBeGreaterThan(0);
   });
@@ -270,20 +267,18 @@ describe("Integration Tests", () => {
     await expect(
       mockVision.observe("constraint-test", async () => {
         const userRepository = instrumentedDataSource.getRepository(TestUser);
-        
+
         // Try to save invalid data that would trigger a database error
         // Note: This is a simplified test - in real scenarios you'd have actual constraints
         await userRepository.save({
           name: null as any, // This should cause a NOT NULL constraint error
           email: "test@example.com",
         });
-      })
+      }),
     ).rejects.toThrow();
 
     const calls = mockVision.getObserveCalls();
-    const errorCall = calls.find(call => 
-      call.data.get("database.success") === false
-    );
+    const errorCall = calls.find((call) => call.data.get("database.success") === false);
 
     expect(errorCall).toBeDefined();
     expect(errorCall?.data.get("database.error")).toBeDefined();

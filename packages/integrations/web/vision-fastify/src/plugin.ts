@@ -21,7 +21,7 @@ import {
 
 /**
  * High-performance Fastify plugin for Vision observability.
- * 
+ *
  * This plugin provides comprehensive observability integration for Fastify applications:
  * - Automatic context creation and propagation
  * - Request/response metadata capture
@@ -30,14 +30,14 @@ import {
  * - Custom extractors for user, correlation, and business data
  * - Security-aware data redaction
  * - Route-level configuration via options
- * 
+ *
  * @example
  * ```typescript
  * import Fastify from 'fastify';
  * import { visionPlugin } from '@rodrigopsasaki/vision-fastify';
- * 
+ *
  * const fastify = Fastify();
- * 
+ *
  * // Register the Vision plugin
  * await fastify.register(visionPlugin, {
  *   captureBody: true,
@@ -46,15 +46,15 @@ import {
  *   },
  *   extractUser: (request) => request.headers['x-user-id']
  * });
- * 
+ *
  * fastify.get('/users/:id', async (request, reply) => {
  *   // Access the Vision context
  *   const ctx = request.visionContext;
- *   
+ *
  *   // Add custom data to the context
  *   vision.set('user_id', request.params.id);
  *   vision.set('operation', 'get_user');
- *   
+ *
  *   // Your route logic here...
  *   const user = await getUser(request.params.id);
  *   return user;
@@ -73,11 +73,11 @@ const visionPluginInternal: FastifyPluginAsync<VisionFastifyPluginOptions> = asy
   }
 
   // Add Vision context to request and reply decorators
-  fastify.decorateRequest('visionContext', null);
-  fastify.decorateReply('visionContext', null);
+  fastify.decorateRequest("visionContext", null);
+  fastify.decorateReply("visionContext", null);
 
   // Pre-handler hook for request processing
-  fastify.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.addHook("preHandler", async (request: FastifyRequest, reply: FastifyReply) => {
     // Check if this route should be excluded
     if (config.shouldExcludeRoute(request) || isRouteExcluded(request.url, config.excludeRoutes)) {
       return;
@@ -104,8 +104,8 @@ const visionPluginInternal: FastifyPluginAsync<VisionFastifyPluginOptions> = asy
         url: request.url,
         route: (request as any).routeOptions?.url,
         ...(correlationId && { correlation_id: correlationId }),
-        ...(user && typeof user === 'object' ? { user } : {}),
-        ...(additionalMetadata && typeof additionalMetadata === 'object' ? additionalMetadata : {}),
+        ...(user && typeof user === "object" ? { user } : {}),
+        ...(additionalMetadata && typeof additionalMetadata === "object" ? additionalMetadata : {}),
       },
     };
 
@@ -114,7 +114,7 @@ const visionPluginInternal: FastifyPluginAsync<VisionFastifyPluginOptions> = asy
       vision.observe(contextConfig, async () => {
         try {
           const visionContext = vision.context();
-          
+
           // Attach context to request and reply
           (request as VisionFastifyRequest).visionContext = visionContext;
           (reply as VisionFastifyReply).visionContext = visionContext;
@@ -152,7 +152,7 @@ const visionPluginInternal: FastifyPluginAsync<VisionFastifyPluginOptions> = asy
   });
 
   // Response hook for capturing response metadata
-  fastify.addHook('onSend', async (request: FastifyRequest, reply: FastifyReply, payload) => {
+  fastify.addHook("onSend", async (request: FastifyRequest, reply: FastifyReply, payload) => {
     // Skip if no Vision context (excluded route)
     const visionContext = (request as VisionFastifyRequest).visionContext;
     if (!visionContext) {
@@ -207,13 +207,13 @@ const visionPluginInternal: FastifyPluginAsync<VisionFastifyPluginOptions> = asy
           ...errorMetadata,
         });
       }
-      
+
       return payload;
     }
   });
 
   // Error hook for capturing error metadata
-  fastify.addHook('onError', async (request: FastifyRequest, reply: FastifyReply, error: Error) => {
+  fastify.addHook("onError", async (request: FastifyRequest, reply: FastifyReply, error: Error) => {
     // Skip if no Vision context (excluded route)
     const visionContext = (request as VisionFastifyRequest).visionContext;
     if (!visionContext || !config.errorHandling.captureErrors) {
@@ -292,7 +292,7 @@ export function createMinimalVisionPlugin(options: Partial<VisionFastifyOptions>
     {
       name: "vision-minimal",
       fastify: "4.x || 5.x",
-    }
+    },
   );
 }
 
@@ -327,7 +327,7 @@ export function createComprehensiveVisionPlugin(options: Partial<VisionFastifyOp
     {
       name: "vision-comprehensive",
       fastify: "4.x || 5.x",
-    }
+    },
   );
 }
 
@@ -358,6 +358,6 @@ export function createPerformanceVisionPlugin(options: Partial<VisionFastifyOpti
     {
       name: "vision-performance",
       fastify: "4.x || 5.x",
-    }
+    },
   );
 }

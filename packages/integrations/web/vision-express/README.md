@@ -24,9 +24,9 @@ npm install @rodrigopsasaki/vision
 ## Quick Start
 
 ```typescript
-import express from 'express';
-import { vision } from '@rodrigopsasaki/vision';
-import { visionMiddleware } from '@rodrigopsasaki/vision-express';
+import express from "express";
+import { vision } from "@rodrigopsasaki/vision";
+import { visionMiddleware } from "@rodrigopsasaki/vision-express";
 
 const app = express();
 
@@ -34,18 +34,18 @@ const app = express();
 vision.init({
   exporters: [
     // Your exporters here
-  ]
+  ],
 });
 
 // Add the Vision middleware - just works out of the box!
 app.use(visionMiddleware());
 
 // Your routes now have automatic context tracking
-app.get('/users/:id', async (req, res) => {
+app.get("/users/:id", async (req, res) => {
   // Add custom data to the context
-  vision.set('user_id', req.params.id);
-  vision.set('operation', 'get_user');
-  
+  vision.set("user_id", req.params.id);
+  vision.set("operation", "get_user");
+
   const user = await getUser(req.params.id);
   res.json(user);
 });
@@ -58,17 +58,19 @@ app.get('/users/:id', async (req, res) => {
 The recommended default middleware - just works out of the box with intelligent defaults.
 
 ```typescript
-import { visionMiddleware } from '@rodrigopsasaki/vision-express';
+import { visionMiddleware } from "@rodrigopsasaki/vision-express";
 
 // Basic usage - no configuration needed
 app.use(visionMiddleware());
 
 // With custom options
-app.use(visionMiddleware({
-  captureBody: true,
-  excludeRoutes: ["/health", "/metrics"],
-  extractUser: (req) => req.headers["x-user-id"],
-}));
+app.use(
+  visionMiddleware({
+    captureBody: true,
+    excludeRoutes: ["/health", "/metrics"],
+    extractUser: (req) => req.headers["x-user-id"],
+  }),
+);
 ```
 
 ### `createVisionMiddleware(options?)`
@@ -76,13 +78,15 @@ app.use(visionMiddleware({
 Creates a Vision Express middleware with custom configuration.
 
 ```typescript
-import { createVisionMiddleware } from '@rodrigopsasaki/vision-express';
+import { createVisionMiddleware } from "@rodrigopsasaki/vision-express";
 
-app.use(createVisionMiddleware({
-  captureBody: true,
-  excludeRoutes: ["/health", "/metrics"],
-  extractUser: (req) => req.user,
-}));
+app.use(
+  createVisionMiddleware({
+    captureBody: true,
+    excludeRoutes: ["/health", "/metrics"],
+    extractUser: (req) => req.user,
+  }),
+);
 ```
 
 ### `createMinimalVisionMiddleware()`
@@ -90,7 +94,7 @@ app.use(createVisionMiddleware({
 Creates a middleware with no Express metadata capture - perfect for when you want Vision context but no Express clutter.
 
 ```typescript
-import { createMinimalVisionMiddleware } from '@rodrigopsasaki/vision-express';
+import { createMinimalVisionMiddleware } from "@rodrigopsasaki/vision-express";
 
 app.use(createMinimalVisionMiddleware());
 ```
@@ -100,7 +104,7 @@ app.use(createMinimalVisionMiddleware());
 Creates a middleware that captures all available data including request bodies (use with caution).
 
 ```typescript
-import { createComprehensiveVisionMiddleware } from '@rodrigopsasaki/vision-express';
+import { createComprehensiveVisionMiddleware } from "@rodrigopsasaki/vision-express";
 
 app.use(createComprehensiveVisionMiddleware());
 ```
@@ -110,7 +114,7 @@ app.use(createComprehensiveVisionMiddleware());
 Creates a middleware with extra security redaction - perfect for high-security applications.
 
 ```typescript
-import { createSecureVisionMiddleware } from '@rodrigopsasaki/vision-express';
+import { createSecureVisionMiddleware } from "@rodrigopsasaki/vision-express";
 
 app.use(createSecureVisionMiddleware());
 ```
@@ -119,35 +123,35 @@ app.use(createSecureVisionMiddleware());
 
 ### Basic Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `enabled` | `boolean` | `true` | Whether the middleware is enabled |
-| `excludeRoutes` | `string[]` | `["/health", "/metrics", "/status", "/favicon.ico"]` | Routes to exclude from tracking |
-| `captureHeaders` | `boolean` | `true` | Capture request headers |
-| `captureQueryParams` | `boolean` | `true` | Capture query parameters |
-| `captureBody` | `boolean` | `false` | Capture request body (off by default for security) |
+| Option               | Type       | Default                                              | Description                                        |
+| -------------------- | ---------- | ---------------------------------------------------- | -------------------------------------------------- |
+| `enabled`            | `boolean`  | `true`                                               | Whether the middleware is enabled                  |
+| `excludeRoutes`      | `string[]` | `["/health", "/metrics", "/status", "/favicon.ico"]` | Routes to exclude from tracking                    |
+| `captureHeaders`     | `boolean`  | `true`                                               | Capture request headers                            |
+| `captureQueryParams` | `boolean`  | `true`                                               | Capture query parameters                           |
+| `captureBody`        | `boolean`  | `false`                                              | Capture request body (off by default for security) |
 
 ### Smart Detection Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `extractUser` | `(req) => unknown` | Smart detection | Extract user from common patterns |
-| `correlationIdHeaders` | `string[]` | Common headers | Headers to check for correlation IDs |
+| Option                 | Type               | Default         | Description                          |
+| ---------------------- | ------------------ | --------------- | ------------------------------------ |
+| `extractUser`          | `(req) => unknown` | Smart detection | Extract user from common patterns    |
+| `correlationIdHeaders` | `string[]`         | Common headers  | Headers to check for correlation IDs |
 
 ### Security Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `redactHeaders` | `string[]` | Sensitive headers | Headers to redact |
-| `redactQueryParams` | `string[]` | Sensitive params | Query params to redact |
-| `redactBodyFields` | `string[]` | Sensitive fields | Body fields to redact |
+| Option              | Type       | Default           | Description            |
+| ------------------- | ---------- | ----------------- | ---------------------- |
+| `redactHeaders`     | `string[]` | Sensitive headers | Headers to redact      |
+| `redactQueryParams` | `string[]` | Sensitive params  | Query params to redact |
+| `redactBodyFields`  | `string[]` | Sensitive fields  | Body fields to redact  |
 
 ### Response Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `includeRequestId` | `boolean` | `true` | Add request ID to response headers |
-| `requestIdHeader` | `string` | `X-Request-ID` | Header name for request ID |
+| Option             | Type      | Default        | Description                        |
+| ------------------ | --------- | -------------- | ---------------------------------- |
+| `includeRequestId` | `boolean` | `true`         | Add request ID to response headers |
+| `requestIdHeader`  | `string`  | `X-Request-ID` | Header name for request ID         |
 
 ## Smart Defaults
 
@@ -157,10 +161,10 @@ The middleware automatically tries to extract user information from common patte
 
 ```typescript
 // Tries these in order:
-req.user                    // Passport.js, JWT middleware
-req.session.user           // Session-based auth
-req.headers["x-user-id"]   // Custom header
-req.headers["x-user"]      // Custom header
+req.user; // Passport.js, JWT middleware
+req.session.user; // Session-based auth
+req.headers["x-user-id"]; // Custom header
+req.headers["x-user"]; // Custom header
 ```
 
 ### Correlation ID Detection
@@ -169,12 +173,12 @@ Automatically finds correlation IDs from common headers:
 
 ```typescript
 // Tries these headers in order:
-"x-correlation-id"
-"x-request-id"
-"x-trace-id"
-"x-transaction-id"
-"correlation-id"
-"request-id"
+"x-correlation-id";
+"x-request-id";
+"x-trace-id";
+"x-transaction-id";
+"correlation-id";
+"request-id";
 ```
 
 ### Security Redaction
@@ -182,6 +186,7 @@ Automatically finds correlation IDs from common headers:
 By default, these fields are automatically redacted:
 
 **Headers:**
+
 - `authorization`
 - `cookie`
 - `x-api-key`
@@ -190,6 +195,7 @@ By default, these fields are automatically redacted:
 - `x-csrf-token`
 
 **Query Parameters:**
+
 - `token`
 - `key`
 - `secret`
@@ -198,6 +204,7 @@ By default, these fields are automatically redacted:
 - `api_key`
 
 **Body Fields:**
+
 - `password`
 - `ssn`
 - `credit_card`
@@ -210,9 +217,9 @@ By default, these fields are automatically redacted:
 ### Basic Usage (Recommended)
 
 ```typescript
-import express from 'express';
-import { vision } from '@rodrigopsasaki/vision';
-import { visionMiddleware } from '@rodrigopsasaki/vision-express';
+import express from "express";
+import { vision } from "@rodrigopsasaki/vision";
+import { visionMiddleware } from "@rodrigopsasaki/vision-express";
 
 const app = express();
 
@@ -220,21 +227,21 @@ const app = express();
 vision.init({
   exporters: [
     {
-      name: 'console',
-      success: (ctx) => console.log('Request completed:', ctx),
-      error: (ctx, err) => console.error('Request failed:', ctx, err),
-    }
-  ]
+      name: "console",
+      success: (ctx) => console.log("Request completed:", ctx),
+      error: (ctx, err) => console.error("Request failed:", ctx, err),
+    },
+  ],
 });
 
 // Add middleware - just works out of the box!
 app.use(visionMiddleware());
 
 // Your routes
-app.get('/api/users/:id', async (req, res) => {
-  vision.set('user_id', req.params.id);
-  vision.set('operation', 'get_user');
-  
+app.get("/api/users/:id", async (req, res) => {
+  vision.set("user_id", req.params.id);
+  vision.set("operation", "get_user");
+
   const user = await getUser(req.params.id);
   res.json(user);
 });
@@ -243,48 +250,50 @@ app.get('/api/users/:id', async (req, res) => {
 ### Custom Configuration
 
 ```typescript
-import express from 'express';
-import { visionMiddleware } from '@rodrigopsasaki/vision-express';
+import express from "express";
+import { visionMiddleware } from "@rodrigopsasaki/vision-express";
 
 const app = express();
 
-app.use(visionMiddleware({
-  // Enable body capture for development
-  captureBody: true,
-  
-  // Exclude additional routes
-  excludeRoutes: ["/health", "/metrics", "/status", "/static", "/favicon.ico"],
-  
-  // Custom user extraction
-  extractUser: (req) => (req as any).user || req.headers["x-user-id"],
-  
-  // Custom correlation ID headers
-  correlationIdHeaders: ["x-correlation-id", "x-request-id", "x-trace-id"],
-  
-  // Additional security redaction
-  redactHeaders: [
-    "authorization",
-    "cookie",
-    "x-api-key",
-    "x-auth-token",
-    "x-session-token",
-    "x-csrf-token"
-  ],
-  redactQueryParams: ["token", "key", "secret", "password", "auth"],
-  redactBodyFields: ["password", "ssn", "credit_card", "secret", "api_key"],
-}));
+app.use(
+  visionMiddleware({
+    // Enable body capture for development
+    captureBody: true,
+
+    // Exclude additional routes
+    excludeRoutes: ["/health", "/metrics", "/status", "/static", "/favicon.ico"],
+
+    // Custom user extraction
+    extractUser: (req) => (req as any).user || req.headers["x-user-id"],
+
+    // Custom correlation ID headers
+    correlationIdHeaders: ["x-correlation-id", "x-request-id", "x-trace-id"],
+
+    // Additional security redaction
+    redactHeaders: [
+      "authorization",
+      "cookie",
+      "x-api-key",
+      "x-auth-token",
+      "x-session-token",
+      "x-csrf-token",
+    ],
+    redactQueryParams: ["token", "key", "secret", "password", "auth"],
+    redactBodyFields: ["password", "ssn", "credit_card", "secret", "api_key"],
+  }),
+);
 ```
 
 ### Different Middleware Options
 
 ```typescript
-import express from 'express';
-import { 
+import express from "express";
+import {
   visionMiddleware,
   createMinimalVisionMiddleware,
   createComprehensiveVisionMiddleware,
-  createSecureVisionMiddleware
-} from '@rodrigopsasaki/vision-express';
+  createSecureVisionMiddleware,
+} from "@rodrigopsasaki/vision-express";
 
 const app = express();
 
@@ -304,33 +313,33 @@ app.use(createSecureVisionMiddleware());
 ### Accessing Context in Routes
 
 ```typescript
-import type { VisionRequest } from '@rodrigopsasaki/vision-express';
+import type { VisionRequest } from "@rodrigopsasaki/vision-express";
 
-app.get('/users/:id', async (req: VisionRequest, res) => {
+app.get("/users/:id", async (req: VisionRequest, res) => {
   // Access the Vision context
   const ctx = req.visionContext;
-  console.log('Request ID:', ctx.id);
-  
+  console.log("Request ID:", ctx.id);
+
   // Add data to the context
-  vision.set('user_id', req.params.id);
-  vision.set('operation', 'get_user');
-  vision.set('timestamp', new Date().toISOString());
-  
+  vision.set("user_id", req.params.id);
+  vision.set("operation", "get_user");
+  vision.set("timestamp", new Date().toISOString());
+
   // Add structured data
-  vision.merge('request', {
+  vision.merge("request", {
     method: req.method,
     path: req.path,
     query: req.query,
   });
-  
+
   // Add to arrays
-  vision.push('events', 'user_lookup_started');
-  
+  vision.push("events", "user_lookup_started");
+
   const user = await getUser(req.params.id);
-  
-  vision.push('events', 'user_lookup_completed');
-  vision.set('result_count', 1);
-  
+
+  vision.push("events", "user_lookup_completed");
+  vision.set("result_count", 1);
+
   res.json(user);
 });
 ```
@@ -358,6 +367,7 @@ curl -H "Authorization: Bearer secret-token" \
 The middleware automatically captures the following data:
 
 ### Request Data
+
 - HTTP method and path
 - Request headers (with automatic redaction)
 - Query parameters (with automatic redaction)
@@ -366,6 +376,7 @@ The middleware automatically captures the following data:
 - User information (if found)
 
 ### Response Data
+
 - Status code
 - Response headers
 - Duration (timing)
@@ -375,14 +386,14 @@ The middleware automatically captures the following data:
 The package provides extended Express interfaces:
 
 ```typescript
-import type { VisionRequest, VisionResponse } from '@rodrigopsasaki/vision-express';
+import type { VisionRequest, VisionResponse } from "@rodrigopsasaki/vision-express";
 
-app.get('/users/:id', (req: VisionRequest, res: VisionResponse) => {
+app.get("/users/:id", (req: VisionRequest, res: VisionResponse) => {
   // req.visionContext is available
   const ctx = req.visionContext;
-  
+
   // Add data to context
-  vision.set('user_id', req.params.id);
+  vision.set("user_id", req.params.id);
 });
 ```
 
@@ -408,17 +419,17 @@ app.get('/users/:id', (req: VisionRequest, res: VisionResponse) => {
 The middleware works seamlessly with any Vision exporter:
 
 ```typescript
-import { vision } from '@rodrigopsasaki/vision';
-import { createDatadogExporter } from '@rodrigopsasaki/vision-datadog-exporter';
+import { vision } from "@rodrigopsasaki/vision";
+import { createDatadogExporter } from "@rodrigopsasaki/vision-datadog-exporter";
 
 // Initialize with exporters
 vision.init({
   exporters: [
     createDatadogExporter({
       apiKey: process.env.DATADOG_API_KEY,
-      service: 'my-api',
-    })
-  ]
+      service: "my-api",
+    }),
+  ],
 });
 
 // Add middleware - just works!
@@ -427,4 +438,4 @@ app.use(visionMiddleware());
 
 ## License
 
-MIT 
+MIT

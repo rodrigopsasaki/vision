@@ -77,7 +77,7 @@ export class MockVisionContext {
 
   observe(name: string, fn: () => Promise<unknown>): Promise<unknown> {
     const beforeData = new Map(this.data);
-    
+
     return fn().then((result) => {
       this.observeCalls.push({
         name,

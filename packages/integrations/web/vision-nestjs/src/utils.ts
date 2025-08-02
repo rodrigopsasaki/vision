@@ -14,7 +14,7 @@ export function isRouteExcluded(path: string, excludePatterns: (string | RegExp)
     if (typeof pattern === "string") {
       return normalizedPath.includes(pattern.toLowerCase());
     }
-    
+
     if (pattern instanceof RegExp) {
       return pattern.test(path);
     }
@@ -47,34 +47,34 @@ export function extractHttpInfo(
   // Capture headers if enabled
   if (options.captureHeaders && request.headers) {
     const headers: Record<string, unknown> = {};
-    
+
     Object.entries(request.headers).forEach(([key, value]) => {
       const normalizedKey = key.toLowerCase();
-      
+
       if (options.redactHeaders?.includes(normalizedKey)) {
         headers[key] = "[REDACTED]";
       } else {
         headers[key] = Array.isArray(value) ? value.join(", ") : value;
       }
     });
-    
+
     info.headers = headers;
   }
 
   // Capture query parameters if enabled
   if (options.captureQuery && request.query) {
     const query: Record<string, unknown> = {};
-    
+
     Object.entries(request.query).forEach(([key, value]) => {
       const normalizedKey = key.toLowerCase();
-      
+
       if (options.redactQuery?.includes(normalizedKey)) {
         query[key] = "[REDACTED]";
       } else {
         query[key] = value;
       }
     });
-    
+
     info.query = query;
   }
 
@@ -108,10 +108,12 @@ export function extractGraphQLInfo(context: ExecutionContext) {
 
     // Extract variables from context
     if (gqlContext?.req?.body?.variables) {
-      graphqlInfo.variables = redactSensitiveData(
-        gqlContext.req.body.variables,
-        ["password", "token", "secret", "api_key"],
-      );
+      graphqlInfo.variables = redactSensitiveData(gqlContext.req.body.variables, [
+        "password",
+        "token",
+        "secret",
+        "api_key",
+      ]);
     }
 
     // Extract query string (be careful with size)
@@ -145,7 +147,7 @@ export function extractWebSocketInfo(context: ExecutionContext) {
     if (client) {
       wsInfo.client_id = client.id;
       wsInfo.client_rooms = client.rooms ? Array.from(client.rooms) : undefined;
-      
+
       // Extract connection info
       if (client.handshake) {
         wsInfo.handshake = {
@@ -192,13 +194,13 @@ export function extractMicroserviceInfo(context: ExecutionContext) {
     // Extract context metadata
     if (contextData) {
       const contextMeta: Record<string, unknown> = {};
-      
+
       // Common microservice context properties
       if (contextData.pattern) contextMeta.pattern = contextData.pattern;
       if (contextData.cmd) contextMeta.command = contextData.cmd;
       if (contextData.id) contextMeta.message_id = contextData.id;
       if (contextData.timestamp) contextMeta.timestamp = contextData.timestamp;
-      
+
       microserviceInfo.context = contextMeta;
     }
 
@@ -228,7 +230,7 @@ export function redactSensitiveData(data: any, sensitiveFields: string[]): any {
 
   for (const [key, value] of Object.entries(data)) {
     const normalizedKey = key.toLowerCase();
-    
+
     if (normalizedSensitiveFields.includes(normalizedKey)) {
       redacted[key] = "[REDACTED]";
     } else if (value && typeof value === "object") {
@@ -250,14 +252,15 @@ export function extractMethodParameters(context: ExecutionContext): Record<strin
     const parameters: Record<string, unknown> = {};
 
     // Different contexts have different argument patterns
-    const contextType = context.getType();
+    const contextType = context.getType() as "http" | "rpc" | "ws" | "graphql";
 
     switch (contextType) {
       case "http":
         // HTTP: [request, response, next]
         if (args[0]?.params) parameters.params = args[0].params;
         if (args[0]?.query) parameters.query = args[0].query;
-        if (args[0]?.body) parameters.body = redactSensitiveData(args[0].body, ["password", "token"]);
+        if (args[0]?.body)
+          parameters.body = redactSensitiveData(args[0].body, ["password", "token"]);
         break;
 
       case "rpc":
@@ -297,7 +300,7 @@ export function extractMethodParameters(context: ExecutionContext): Record<strin
  * Generates a smart context name based on the execution context.
  */
 export function generateSmartContextName(context: ExecutionContext): string {
-  const contextType = context.getType();
+  const contextType = context.getType() as "http" | "rpc" | "ws" | "graphql";
   const controllerName = context.getClass().name;
   const handlerName = context.getHandler().name;
 
@@ -343,11 +346,14 @@ export function safeStringify(value: unknown, maxLength = 1000): string {
   try {
     if (value === null) return "null";
     if (value === undefined) return "undefined";
-    if (typeof value === "string") return value.length > maxLength ? `${value.substring(0, maxLength)}...` : value;
+    if (typeof value === "string")
+      return value.length > maxLength ? `${value.substring(0, maxLength)}...` : value;
     if (typeof value === "number" || typeof value === "boolean") return String(value);
-    
+
     const stringified = JSON.stringify(value, null, 2);
-    return stringified.length > maxLength ? `${stringified.substring(0, maxLength)}...` : stringified;
+    return stringified.length > maxLength
+      ? `${stringified.substring(0, maxLength)}...`
+      : stringified;
   } catch {
     return "[Unable to stringify]";
   }

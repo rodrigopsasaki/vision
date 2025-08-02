@@ -1,16 +1,16 @@
 /**
  * Performance-Optimized Vision TypeORM Integration Example
- * 
+ *
  * This example demonstrates how to configure Vision TypeORM integration
  * for high-performance production environments with minimal overhead.
  */
 
 import { DataSource, Entity, PrimaryGeneratedColumn, Column, Index } from "typeorm";
 import { vision } from "@rodrigopsasaki/vision";
-import { 
+import {
   instrumentDataSource,
   visionTransaction,
-  type VisionTypeOrmConfig 
+  type VisionTypeOrmConfig,
 } from "@rodrigopsasaki/vision-typeorm";
 
 @Entity()
@@ -52,25 +52,25 @@ class Product {
 // Performance-optimized configuration
 const performanceConfig: VisionTypeOrmConfig = {
   enabled: true,
-  
+
   // Minimize logging overhead
   logParams: false, // Disable parameter logging to reduce serialization cost
   logQuery: false, // Disable query logging to reduce string processing
   logResultCount: true, // Keep result count for business metrics
-  
+
   // Optimize query truncation
   maxQueryLength: 200, // Shorter queries to reduce memory usage
-  
+
   // Streamlined operation naming
   includeEntityInName: true,
   operationPrefix: "db", // Short prefix
-  
+
   // Minimal security (assumes logs are already secured)
   redactFields: ["password"], // Only redact critical fields
-  
+
   // Disable connection info logging (static information)
   logConnectionInfo: false,
-  
+
   // Selective instrumentation for hot paths
   instrumentTransactions: true, // Keep transaction tracking
   instrumentRepositories: true,
@@ -115,9 +115,9 @@ class PerformanceMonitor {
             const operation = ctx.data.get("database.operation") as string;
             console.error(`Database error in ${operation}:`, err);
             this.recordMetric(`db.${operation}.errors`, 1);
-          }
-        }
-      ]
+          },
+        },
+      ],
     });
   }
 
@@ -140,7 +140,7 @@ class ProductService {
       vision.set("limit", limit);
 
       const productRepository = this.dataSource.getRepository(Product);
-      
+
       // Optimized query with proper indexing
       const products = await productRepository.find({
         where: { category, inStock: true },
@@ -155,26 +155,33 @@ class ProductService {
 
   // Batch operations: full instrumentation for monitoring
   async bulkUpdatePrices(categoryPriceMap: Record<string, number>): Promise<void> {
-    return visionTransaction(this.dataSource, async (manager) => {
-      const productRepository = manager.getRepository(Product);
-      let totalUpdated = 0;
+    return visionTransaction(
+      this.dataSource,
+      async (manager) => {
+        const productRepository = manager.getRepository(Product);
+        let totalUpdated = 0;
 
-      for (const [category, priceMultiplier] of Object.entries(categoryPriceMap)) {
-        // Use raw query for performance
-        const result = await manager.query(`
+        for (const [category, priceMultiplier] of Object.entries(categoryPriceMap)) {
+          // Use raw query for performance
+          const result = await manager.query(
+            `
           UPDATE product 
           SET price = price * $1 
           WHERE category = $2 AND inStock = true
-        `, [priceMultiplier, category]);
+        `,
+            [priceMultiplier, category],
+          );
 
-        totalUpdated += result.affectedRows || 0;
-        
-        vision.push("updated_categories", category);
-      }
+          totalUpdated += result.affectedRows || 0;
 
-      vision.set("total_products_updated", totalUpdated);
-      vision.set("operation_type", "bulk_price_update");
-    }, performanceConfig);
+          vision.push("updated_categories", category);
+        }
+
+        vision.set("total_products_updated", totalUpdated);
+        vision.set("operation_type", "bulk_price_update");
+      },
+      performanceConfig,
+    );
   }
 
   // Read-heavy operations: optimized for minimal overhead
@@ -211,15 +218,15 @@ async function performanceOptimizedExample() {
     database: "performance_test",
     entities: [User, Product],
     synchronize: false, // Disable in production
-    
+
     // Connection pool optimization
     extra: {
       max: 20, // Maximum connections
-      min: 5,  // Minimum connections
+      min: 5, // Minimum connections
       acquireTimeoutMillis: 30000,
       idleTimeoutMillis: 30000,
     },
-    
+
     // Query optimization
     cache: {
       duration: 30000, // 30 second cache
@@ -235,39 +242,43 @@ async function performanceOptimizedExample() {
   // Example 1: High-frequency operations
   console.log("Testing high-frequency operations...");
   const startTime = Date.now();
-  
+
   // Simulate concurrent requests
-  const searchPromises = Array(10).fill(0).map(async (_, index) => {
-    return productService.findProductsByCategory("electronics", 20);
-  });
+  const searchPromises = Array(10)
+    .fill(0)
+    .map(async (_, index) => {
+      return productService.findProductsByCategory("electronics", 20);
+    });
 
   const results = await Promise.all(searchPromises);
   const endTime = Date.now();
-  
+
   console.log(`Completed ${searchPromises.length} concurrent searches in ${endTime - startTime}ms`);
-  console.log(`Average results per search: ${results.reduce((sum, r) => sum + r.length, 0) / results.length}`);
+  console.log(
+    `Average results per search: ${results.reduce((sum, r) => sum + r.length, 0) / results.length}`,
+  );
 
   // Example 2: Batch operations with monitoring
   console.log("Testing batch operations...");
-  
+
   await productService.bulkUpdatePrices({
-    "electronics": 1.05, // 5% increase
-    "clothing": 0.95,    // 5% decrease
-    "books": 1.02,       // 2% increase
+    electronics: 1.05, // 5% increase
+    clothing: 0.95, // 5% decrease
+    books: 1.02, // 2% increase
   });
 
   // Example 3: Analytics without instrumentation overhead
   console.log("Generating analytics...");
-  
+
   const stats = await productService.getProductStats();
   console.log("Product statistics:", stats);
 
   // Example 4: Connection pool monitoring
   await vision.observe("system.health_check", async () => {
     const connection = instrumentedDataSource.manager.connection;
-    
+
     // Check connection pool health
-    if (connection.driver && 'pool' in connection.driver) {
+    if (connection.driver && "pool" in connection.driver) {
       const pool = (connection.driver as any).pool;
       if (pool) {
         vision.set("pool_total_connections", pool.totalCount);
@@ -279,7 +290,7 @@ async function performanceOptimizedExample() {
     // Sample query to verify connection
     const userCount = await instrumentedDataSource.getRepository(User).count();
     const productCount = await instrumentedDataSource.getRepository(Product).count();
-    
+
     vision.set("total_users", userCount);
     vision.set("total_products", productCount);
     vision.set("health_status", "healthy");
@@ -290,7 +301,7 @@ async function performanceOptimizedExample() {
 
 /**
  * Performance-optimized output focuses on key metrics:
- * 
+ *
  * {
  *   "name": "product.search",
  *   "data": {
@@ -302,7 +313,7 @@ async function performanceOptimizedExample() {
  *     "database.result_count": 15
  *   }
  * }
- * 
+ *
  * Performance alerts:
  * METRIC: db.find.duration = 12
  * METRIC: db.find.result_count = 15

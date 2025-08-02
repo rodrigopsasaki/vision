@@ -52,7 +52,7 @@ describe("instrumentDataSource", () => {
 
     await mockVision.observe("test", async () => {
       const repository = instrumentedDataSource.getRepository(TestUser);
-      
+
       expect(repository).toBeDefined();
       expect(repository.__visionInstrumented).toBe(true);
       expect(repository.__entityName).toBe("TestUser");
@@ -65,8 +65,8 @@ describe("instrumentDataSource", () => {
   });
 
   it("should capture connection info when enabled", async () => {
-    const instrumentedDataSource = instrumentDataSource(dataSource, { 
-      logConnectionInfo: true 
+    const instrumentedDataSource = instrumentDataSource(dataSource, {
+      logConnectionInfo: true,
     });
 
     await mockVision.observe("test", async () => {
@@ -152,7 +152,7 @@ describe("instrumentRepository", () => {
       mockVision.observe("test", async () => {
         // Try to save invalid data to trigger error
         await instrumentedRepository.save({ name: null });
-      })
+      }),
     ).rejects.toThrow();
 
     const lastCall = mockVision.getLastCall();
@@ -162,8 +162,8 @@ describe("instrumentRepository", () => {
   });
 
   it("should log parameters when enabled", async () => {
-    const instrumentedRepository = instrumentRepository(repository, { 
-      logParams: true 
+    const instrumentedRepository = instrumentRepository(repository, {
+      logParams: true,
     });
 
     const user = { name: "John Doe", email: "john@example.com", password: "secret123" };
@@ -180,8 +180,8 @@ describe("instrumentRepository", () => {
   });
 
   it("should not log parameters when disabled", async () => {
-    const instrumentedRepository = instrumentRepository(repository, { 
-      logParams: false 
+    const instrumentedRepository = instrumentRepository(repository, {
+      logParams: false,
     });
 
     const user = { name: "John Doe", email: "john@example.com" };
@@ -195,8 +195,8 @@ describe("instrumentRepository", () => {
   });
 
   it("should work with disabled instrumentation", async () => {
-    const instrumentedRepository = instrumentRepository(repository, { 
-      enabled: false 
+    const instrumentedRepository = instrumentRepository(repository, {
+      enabled: false,
     });
 
     expect(instrumentedRepository).toBe(repository);

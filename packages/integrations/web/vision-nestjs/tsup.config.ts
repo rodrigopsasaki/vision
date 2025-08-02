@@ -10,12 +10,12 @@ export default defineConfig({
   outDir: "dist",
   external: [
     "@nestjs/common",
-    "@nestjs/core", 
+    "@nestjs/core",
     "@nestjs/graphql",
     "@nestjs/microservices",
     "@nestjs/websockets",
     "@rodrigopsasaki/vision",
     "rxjs",
-    "reflect-metadata"
-  ]
+    "reflect-metadata",
+  ],
 });

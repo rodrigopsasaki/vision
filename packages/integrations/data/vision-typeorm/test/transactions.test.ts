@@ -1,6 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { DataSource } from "typeorm";
-import { visionTransaction, visionTransactionWithIsolation, visionQueryRunner } from "../src/transactions";
+import {
+  visionTransaction,
+  visionTransactionWithIsolation,
+  visionQueryRunner,
+} from "../src/transactions";
 import { createTestDataSource, TestUser, MockVisionContext } from "./setup";
 
 // Create mock vision instance
@@ -66,12 +70,12 @@ describe("visionTransaction", () => {
   it("should track query count during transaction", async () => {
     await visionTransaction(dataSource, async (manager) => {
       const repository = manager.getRepository(TestUser);
-      
+
       // Perform multiple operations
       await repository.save({ name: "User 1", email: "user1@example.com" });
       await repository.save({ name: "User 2", email: "user2@example.com" });
       await repository.find();
-      
+
       return "done";
     });
 
@@ -84,7 +88,7 @@ describe("visionTransaction", () => {
     await expect(
       visionTransaction(dataSource, async (manager) => {
         throw new Error("Transaction error");
-      })
+      }),
     ).rejects.toThrow("Transaction error");
 
     const lastCall = mockVision.getLastCall();
@@ -97,18 +101,18 @@ describe("visionTransaction", () => {
     await visionTransaction(dataSource, async (manager) => {
       // Simulate nested transaction by manually setting context
       mockVision.set("database.type", "transaction");
-      
+
       await visionTransaction(manager, async (nestedManager) => {
         const repository = nestedManager.getRepository(TestUser);
         await repository.save({ name: "Nested User", email: "nested@example.com" });
         return "nested done";
       });
-      
+
       return "outer done";
     });
 
     const calls = mockVision.getObserveCalls();
-    const nestedCall = calls.find(call => call.data.get("database.nested") === true);
+    const nestedCall = calls.find((call) => call.data.get("database.nested") === true);
     expect(nestedCall).toBeDefined();
   });
 
@@ -120,7 +124,7 @@ describe("visionTransaction", () => {
         const user = await repository.save({ name: "Regular User", email: "regular@example.com" });
         return user;
       },
-      { enabled: false }
+      { enabled: false },
     );
 
     expect(result).toBeDefined();
@@ -152,9 +156,12 @@ describe("visionTransactionWithIsolation", () => {
       "READ COMMITTED",
       async (manager) => {
         const repository = manager.getRepository(TestUser);
-        const user = await repository.save({ name: "Isolated User", email: "isolated@example.com" });
+        const user = await repository.save({
+          name: "Isolated User",
+          email: "isolated@example.com",
+        });
         return user;
-      }
+      },
     );
 
     expect(result).toBeDefined();
@@ -186,12 +193,12 @@ describe("visionQueryRunner", () => {
     const result = await visionQueryRunner(dataSource, async (queryRunner) => {
       await queryRunner.connect();
       await queryRunner.startTransaction();
-      
+
       const insertResult = await queryRunner.query(
         "INSERT INTO test_user (name, email) VALUES (?, ?)",
-        ["Query User", "query@example.com"]
+        ["Query User", "query@example.com"],
       );
-      
+
       await queryRunner.commitTransaction();
       return insertResult;
     });
@@ -210,12 +217,12 @@ describe("visionQueryRunner", () => {
   it("should track query count", async () => {
     await visionQueryRunner(dataSource, async (queryRunner) => {
       await queryRunner.connect();
-      
+
       // Execute multiple queries
       await queryRunner.query("SELECT 1");
       await queryRunner.query("SELECT 2");
       await queryRunner.query("SELECT 3");
-      
+
       return "done";
     });
 
@@ -228,7 +235,7 @@ describe("visionQueryRunner", () => {
       visionQueryRunner(dataSource, async (queryRunner) => {
         await queryRunner.connect();
         throw new Error("QueryRunner error");
-      })
+      }),
     ).rejects.toThrow("QueryRunner error");
 
     const lastCall = mockVision.getLastCall();
@@ -244,7 +251,7 @@ describe("visionQueryRunner", () => {
         const selectResult = await queryRunner.query("SELECT 1 as test");
         return selectResult;
       },
-      { enabled: false }
+      { enabled: false },
     );
 
     expect(result).toBeDefined();

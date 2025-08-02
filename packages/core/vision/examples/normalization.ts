@@ -10,8 +10,8 @@ function runExample() {
     normalization: {
       enabled: true,
       keyCasing: "snake_case",
-      deep: true
-    }
+      deep: true,
+    },
   });
 
   console.log("🔧 Initialized Vision with snake_case normalization\n");
@@ -25,9 +25,11 @@ function runExample() {
     vision.set("lastName", "Doe");
     vision.set("isActive", true);
     vision.set("lastLoginAt", "2023-01-01T00:00:00Z");
-    
+
     console.log("   ↳ Set keys: userId, firstName, lastName, isActive, lastLoginAt");
-    console.log("   ↳ Exporters will receive: user_id, first_name, last_name, is_active, last_login_at");
+    console.log(
+      "   ↳ Exporters will receive: user_id, first_name, last_name, is_active, last_login_at",
+    );
   });
 
   console.log();
@@ -39,7 +41,7 @@ function runExample() {
       personalInfo: {
         firstName: "Jane",
         lastName: "Smith",
-        birthDate: "1990-01-15"
+        birthDate: "1990-01-15",
       },
       contactDetails: {
         emailAddress: "jane@example.com",
@@ -47,16 +49,16 @@ function runExample() {
         homeAddress: {
           streetName: "Main St",
           cityName: "Boston",
-          zipCode: "02101"
-        }
+          zipCode: "02101",
+        },
       },
       preferences: {
         emailNotifications: true,
         darkMode: false,
-        language: "en-US"
-      }
+        language: "en-US",
+      },
     });
-    
+
     console.log("   ↳ Set nested object with camelCase keys");
     console.log("   ↳ All nested keys will be converted to snake_case");
   });
@@ -70,14 +72,14 @@ function runExample() {
       productId: "prod-123",
       productName: "Widget",
       unitPrice: 29.99,
-      quantity: 2
+      quantity: 2,
     });
-    
+
     vision.push("orderItems", {
-      productId: "prod-456", 
+      productId: "prod-456",
       productName: "Gadget",
       unitPrice: 19.99,
-      quantity: 1
+      quantity: 1,
     });
 
     vision.merge("orderMetadata", {
@@ -87,8 +89,8 @@ function runExample() {
       shippingAddress: {
         streetName: "Oak Avenue",
         cityName: "New York",
-        stateCode: "NY"
-      }
+        stateCode: "NY",
+      },
     });
 
     console.log("   ↳ Added array items and merged metadata");
@@ -99,14 +101,14 @@ function runExample() {
 
   // Example 4: Different casing styles
   console.log("📝 Example 4: Different casing styles");
-  
+
   // Switch to camelCase
   vision.init({
     normalization: {
       enabled: true,
       keyCasing: "camelCase",
-      deep: true
-    }
+      deep: true,
+    },
   });
 
   vision.observe("api.response", async () => {
@@ -116,10 +118,10 @@ function runExample() {
       last_name: "Wilson",
       account_settings: {
         email_notifications: true,
-        two_factor_enabled: false
-      }
+        two_factor_enabled: false,
+      },
     });
-    
+
     console.log("   ↳ Input with snake_case keys");
     console.log("   ↳ Will be normalized to camelCase");
   });
@@ -132,15 +134,15 @@ function runExample() {
     normalization: {
       enabled: false,
       keyCasing: "none",
-      deep: true
-    }
+      deep: true,
+    },
   });
 
   vision.observe("legacy.system", async () => {
     vision.set("mixed_CaseKeys", "value1");
     vision.set("another-key", "value2");
     vision.set("YetAnotherKey", "value3");
-    
+
     console.log("   ↳ Mixed casing keys will remain unchanged");
     console.log("   ↳ Normalization is disabled");
   });

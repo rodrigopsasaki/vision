@@ -21,8 +21,18 @@ export const DEFAULT_CONFIG: Required<VisionTypeOrmConfig> = {
 export const METHOD_CATEGORIES: TypeOrmMethodCategories = {
   query: ["query", "createQueryBuilder", "createSelectQueryBuilder"],
   find: [
-    "find", "findBy", "findAndCount", "findAndCountBy", "findOne", "findOneBy", 
-    "findOneOrFail", "findOneByOrFail", "count", "countBy", "exist", "existBy"
+    "find",
+    "findBy",
+    "findAndCount",
+    "findAndCountBy",
+    "findOne",
+    "findOneBy",
+    "findOneOrFail",
+    "findOneByOrFail",
+    "count",
+    "countBy",
+    "exist",
+    "existBy",
   ],
   save: ["save", "insert", "update", "upsert"],
   remove: ["remove", "delete", "softRemove", "softDelete", "restore"],
@@ -113,7 +123,7 @@ export function createOperationName(
   config: Required<VisionTypeOrmConfig>,
 ): string {
   const parts = [config.operationPrefix];
-  
+
   if (config.includeEntityInName && entity) {
     parts.push(entity.toLowerCase());
   }
@@ -132,7 +142,7 @@ export function extractErrorDetails(error: unknown): TypeOrmErrorDetails {
 
   if (error && typeof error === "object") {
     const err = error as any;
-    
+
     if (err.code) details.code = err.code;
     if (err.sqlState) details.sqlState = err.sqlState;
     if (err.query) details.query = err.query;
@@ -190,14 +200,16 @@ export function isInternalMethod(method: string): boolean {
  */
 export function safeSerializeParams(params: unknown): unknown {
   try {
-    return JSON.parse(JSON.stringify(params, (key, value) => {
-      if (typeof value === "function") return "[Function]";
-      if (typeof value === "symbol") return "[Symbol]";
-      if (typeof value === "bigint") return value.toString() + "n";
-      if (value instanceof Date) return value.toISOString();
-      if (value instanceof RegExp) return value.toString();
-      return value;
-    }));
+    return JSON.parse(
+      JSON.stringify(params, (key, value) => {
+        if (typeof value === "function") return "[Function]";
+        if (typeof value === "symbol") return "[Symbol]";
+        if (typeof value === "bigint") return value.toString() + "n";
+        if (value instanceof Date) return value.toISOString();
+        if (value instanceof RegExp) return value.toString();
+        return value;
+      }),
+    );
   } catch {
     return "[Circular or Non-Serializable]";
   }

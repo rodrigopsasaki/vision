@@ -1,22 +1,23 @@
-import { vision } from "@rodrigopsasaki/vision";
+import "reflect-metadata";
 import type { CanActivate, ExecutionContext } from "@nestjs/common";
 import { Injectable, Optional } from "@nestjs/common";
+import { vision } from "@rodrigopsasaki/vision";
 
 import { VisionService } from "./service";
 import type { VisionExecutionContextType } from "./types";
 
 /**
  * Vision Guard for enhanced security and audit logging.
- * 
+ *
  * This guard integrates with NestJS's security pipeline to:
  * - Capture authentication and authorization attempts
  * - Log security-sensitive operations with proper context
  * - Track failed authentication attempts for security monitoring
  * - Provide audit trails for compliance requirements
- * 
+ *
  * The guard runs before route handlers and can capture security context
  * that will be available throughout the entire request lifecycle.
- * 
+ *
  * @example
  * ```typescript
  * // Enable globally
@@ -24,7 +25,7 @@ import type { VisionExecutionContextType } from "./types";
  *   imports: [VisionModule.forRoot({}, true)], // Second parameter enables guard
  * })
  * export class AppModule {}
- * 
+ *
  * // Or use on specific controllers
  * @Controller('admin')
  * @UseGuards(VisionGuard)
@@ -35,7 +36,7 @@ import type { VisionExecutionContextType } from "./types";
  *     return this.usersService.findAll();
  *   }
  * }
- * 
+ *
  * // Or on specific routes
  * @Controller('api')
  * export class APIController {
@@ -60,7 +61,7 @@ export class VisionGuard implements CanActivate {
     } catch (error) {
       // Log guard errors but don't block the request
       console.warn("[Vision Guard] Error capturing security context:", error);
-      
+
       // Still capture the error in Vision context if possible
       try {
         vision.set("guard_error", {
@@ -70,14 +71,14 @@ export class VisionGuard implements CanActivate {
       } catch {
         // Ignore nested errors
       }
-      
+
       return true;
     }
   }
 
   private captureSecurityContext(context: ExecutionContext): void {
     const contextType = context.getType<VisionExecutionContextType>();
-    
+
     // Mark this as a security-monitored operation
     vision.set("security_monitored", true);
     vision.set("security_guard_timestamp", new Date().toISOString());
@@ -101,7 +102,7 @@ export class VisionGuard implements CanActivate {
   private captureHttpSecurityContext(context: ExecutionContext): void {
     try {
       const request = context.switchToHttp().getRequest();
-      
+
       const securityInfo: Record<string, unknown> = {
         ip_address: this.getClientIP(request),
         user_agent: request.headers?.["user-agent"],
@@ -117,18 +118,18 @@ export class VisionGuard implements CanActivate {
         securityInfo.user_id = request.user.id || request.user.sub || request.user.userId;
         securityInfo.user_roles = request.user.roles || request.user.role;
         securityInfo.user_permissions = request.user.permissions;
-        
+
         // Capture additional user context if available
         if (request.user.email) {
           securityInfo.user_email = request.user.email;
         }
-        
+
         if (request.user.organizationId) {
           securityInfo.organization_id = request.user.organizationId;
         }
       } else {
         securityInfo.authenticated = false;
-        
+
         // Check for authentication attempts
         const authHeader = request.headers?.authorization;
         if (authHeader) {
@@ -168,18 +169,21 @@ export class VisionGuard implements CanActivate {
   private captureGraphQLSecurityContext(context: ExecutionContext): void {
     try {
       const gqlContext = context.getArgs()[2];
-      
+
       if (gqlContext?.req) {
         // GraphQL requests often come through HTTP, so we can reuse HTTP logic
-        const httpContext = { ...context, switchToHttp: () => ({ getRequest: () => gqlContext.req }) };
+        const httpContext = {
+          ...context,
+          switchToHttp: () => ({ getRequest: () => gqlContext.req }),
+        };
         this.captureHttpSecurityContext(httpContext as ExecutionContext);
-        
+
         // Add GraphQL-specific security information
         const securityInfo: Record<string, unknown> = {
           graphql_operation: true,
           operation_depth: this.calculateGraphQLDepth(context.getArgs()[3]),
         };
-        
+
         vision.merge("security", securityInfo);
       }
     } catch (error) {
@@ -190,7 +194,7 @@ export class VisionGuard implements CanActivate {
   private captureWebSocketSecurityContext(context: ExecutionContext): void {
     try {
       const client = context.switchToWs().getClient();
-      
+
       const securityInfo: Record<string, unknown> = {
         websocket_connection: true,
         client_id: client.id,
@@ -201,7 +205,7 @@ export class VisionGuard implements CanActivate {
         securityInfo.handshake_address = client.handshake.address;
         securityInfo.handshake_origin = client.handshake.headers?.origin;
         securityInfo.handshake_user_agent = client.handshake.headers?.["user-agent"];
-        
+
         // Check for authentication in handshake
         if (client.handshake.auth) {
           securityInfo.websocket_authenticated = !!client.handshake.auth.user;
@@ -217,7 +221,7 @@ export class VisionGuard implements CanActivate {
   private captureMicroserviceSecurityContext(context: ExecutionContext): void {
     try {
       const rpcContext = context.switchToRpc().getContext();
-      
+
       const securityInfo: Record<string, unknown> = {
         microservice_message: true,
         message_pattern: rpcContext?.pattern || rpcContext?.cmd,
@@ -248,10 +252,14 @@ export class VisionGuard implements CanActivate {
 
   private detectSuspiciousPatterns(request: any, securityInfo: Record<string, unknown>): void {
     const suspiciousPatterns: string[] = [];
-    
+
     // Check for suspicious user agents
     const userAgent = request.headers?.["user-agent"]?.toLowerCase() || "";
-    if (userAgent.includes("bot") || userAgent.includes("crawler") || userAgent.includes("spider")) {
+    if (
+      userAgent.includes("bot") ||
+      userAgent.includes("crawler") ||
+      userAgent.includes("spider")
+    ) {
       suspiciousPatterns.push("bot_user_agent");
     }
 
@@ -263,7 +271,11 @@ export class VisionGuard implements CanActivate {
 
     // Check for potential SQL injection patterns in query params
     const queryString = JSON.stringify(request.query || {}).toLowerCase();
-    if (queryString.includes("union") || queryString.includes("select") || queryString.includes("drop")) {
+    if (
+      queryString.includes("union") ||
+      queryString.includes("select") ||
+      queryString.includes("drop")
+    ) {
       suspiciousPatterns.push("potential_sql_injection");
     }
 
@@ -291,14 +303,14 @@ export class VisionGuard implements CanActivate {
 
     function getDepth(selectionSet: any, currentDepth = 1): number {
       let maxDepth = currentDepth;
-      
+
       for (const selection of selectionSet.selections || []) {
         if (selection.selectionSet) {
           const depth = getDepth(selection.selectionSet, currentDepth + 1);
           maxDepth = Math.max(maxDepth, depth);
         }
       }
-      
+
       return maxDepth;
     }
 

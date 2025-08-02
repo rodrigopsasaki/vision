@@ -1,5 +1,5 @@
-import type { VisionContext } from "@rodrigopsasaki/vision";
 import type { ExecutionContext } from "@nestjs/common";
+import type { VisionContext } from "@rodrigopsasaki/vision";
 
 /**
  * Extended Request interface with Vision context attached.
@@ -15,6 +15,9 @@ export interface VisionRequest {
   params?: Record<string, string>;
   ip?: string;
   user?: any;
+  connection?: {
+    remoteAddress?: string;
+  };
 }
 
 /**
@@ -199,7 +202,13 @@ export const DEFAULT_VISION_NESTJS_OPTIONS: Required<VisionNestJSOptions> = {
   enabled: true,
   excludeRoutes: ["/health", "/metrics", "/favicon.ico"],
   extractUser: () => undefined,
-  correlationIdHeaders: ["x-correlation-id", "x-trace-id", "x-request-id", "correlation-id", "trace-id"],
+  correlationIdHeaders: [
+    "x-correlation-id",
+    "x-trace-id",
+    "x-request-id",
+    "correlation-id",
+    "trace-id",
+  ],
   captureRequest: true,
   captureHeaders: false,
   captureQueryParams: true,
@@ -219,7 +228,7 @@ export const DEFAULT_VISION_NESTJS_OPTIONS: Required<VisionNestJSOptions> = {
     const contextType = context.getType<VisionExecutionContextType>();
     const controller = context.getClass();
     const handler = context.getHandler();
-    
+
     return `${contextType}.${controller.name}.${handler.name}`;
   },
   transformError: (error: unknown) => ({
@@ -237,7 +246,7 @@ export const DEFAULT_VISION_NESTJS_OPTIONS: Required<VisionNestJSOptions> = {
 /**
  * Token for injecting Vision NestJS options.
  */
-export const VISION_NESTJS_OPTIONS = Symbol("VISION_NESTJS_OPTIONS");
+export const VISION_NESTJS_OPTIONS: symbol = Symbol("VISION_NESTJS_OPTIONS");
 
 /**
  * Token for injecting the Vision service.

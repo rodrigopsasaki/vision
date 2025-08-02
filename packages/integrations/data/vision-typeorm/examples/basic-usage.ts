@@ -1,6 +1,6 @@
 /**
  * Basic Vision TypeORM Integration Example
- * 
+ *
  * This example demonstrates the simplest way to add Vision observability
  * to your TypeORM application.
  */
@@ -54,7 +54,7 @@ async function basicExample() {
   // 3. Use your repositories normally - Vision will automatically observe all operations
   await vision.observe("user.registration", async () => {
     const userRepository = instrumentedDataSource.getRepository(User);
-    
+
     // This will be automatically observed as "db.user.save"
     const user = await userRepository.save({
       name: "John Doe",
@@ -73,7 +73,7 @@ async function basicExample() {
     });
 
     vision.set("post_id", post.id);
-    
+
     return { user, post };
   });
 
@@ -82,7 +82,7 @@ async function basicExample() {
 
 /**
  * Output will show structured events like:
- * 
+ *
  * {
  *   "name": "user.registration",
  *   "timestamp": "2025-01-15T10:30:00.000Z",
@@ -92,9 +92,9 @@ async function basicExample() {
  *     "post_id": 1
  *   }
  * }
- * 
+ *
  * Plus individual database operations:
- * 
+ *
  * {
  *   "name": "db.user.save",
  *   "data": {

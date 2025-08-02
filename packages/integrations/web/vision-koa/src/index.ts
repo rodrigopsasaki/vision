@@ -17,9 +17,7 @@ export type {
   ErrorMetadata,
 } from "./types";
 
-export {
-  DEFAULT_VISION_KOA_OPTIONS,
-} from "./types";
+export { DEFAULT_VISION_KOA_OPTIONS } from "./types";
 
 // Utilities
 export {

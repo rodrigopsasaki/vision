@@ -184,12 +184,9 @@ describe("VisionParam decorator", () => {
 
   it("should mark parameters for capture", () => {
     const mockReflect = vi.mocked(require("reflect-metadata").Reflect);
-    
+
     class TestRepository {
-      async findUser(
-        @VisionParam("userId") id: number,
-        @VisionParam("options") options?: any
-      ) {
+      async findUser(@VisionParam("userId") id: number, @VisionParam("options") options?: any) {
         return { id, name: "Test User" };
       }
     }

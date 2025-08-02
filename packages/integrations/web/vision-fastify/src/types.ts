@@ -288,7 +288,7 @@ export const DEFAULT_VISION_FASTIFY_OPTIONS: Required<VisionFastifyOptions> = {
   captureTiming: true,
   captureFastifyMetadata: true,
 
-  contextNameGenerator: (request) => 
+  contextNameGenerator: (request) =>
     `${request.method.toLowerCase()}.${request.routeOptions?.url || request.url}`,
 
   shouldExcludeRoute: (request) => {
@@ -306,19 +306,21 @@ export const DEFAULT_VISION_FASTIFY_OPTIONS: Required<VisionFastifyOptions> = {
 
   extractUser: (request) => {
     // Try to extract user from common authentication patterns
-    return (request as any).user || 
-           (request as any).session?.user ||
-           request.headers["x-user-id"] ||
-           request.headers["x-user"] ||
-           undefined;
+    return (
+      (request as any).user ||
+      (request as any).session?.user ||
+      request.headers["x-user-id"] ||
+      request.headers["x-user"] ||
+      undefined
+    );
   },
 
   extractCorrelationId: (request) => {
     return (
-      request.headers["x-correlation-id"] as string ||
-      request.headers["x-request-id"] as string ||
-      request.headers["x-trace-id"] as string ||
-      request.headers["x-transaction-id"] as string
+      (request.headers["x-correlation-id"] as string) ||
+      (request.headers["x-request-id"] as string) ||
+      (request.headers["x-trace-id"] as string) ||
+      (request.headers["x-transaction-id"] as string)
     );
   },
 
@@ -334,16 +336,9 @@ export const DEFAULT_VISION_FASTIFY_OPTIONS: Required<VisionFastifyOptions> = {
     "x-api-key",
     "x-auth-token",
     "x-session-token",
-    "x-csrf-token"
+    "x-csrf-token",
   ],
-  redactQueryParams: [
-    "token",
-    "key",
-    "secret",
-    "password",
-    "auth",
-    "api_key"
-  ],
+  redactQueryParams: ["token", "key", "secret", "password", "auth", "api_key"],
   redactBodyFields: [
     "password",
     "ssn",
@@ -353,7 +348,7 @@ export const DEFAULT_VISION_FASTIFY_OPTIONS: Required<VisionFastifyOptions> = {
     "api_key",
     "apiKey",
     "private_key",
-    "privateKey"
+    "privateKey",
   ],
 
   correlationIdHeaders: [
@@ -362,7 +357,7 @@ export const DEFAULT_VISION_FASTIFY_OPTIONS: Required<VisionFastifyOptions> = {
     "x-trace-id",
     "x-transaction-id",
     "correlation-id",
-    "request-id"
+    "request-id",
   ],
 
   performance: {

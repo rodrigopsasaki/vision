@@ -38,13 +38,13 @@ async function main() {
   await vision.observe("example.find-users", async () => {
     console.log("Finding all users...");
     const users = await prisma.user.findMany();
-    
+
     // Vision automatically captures:
     // - database.operation: "user.findMany"
     // - database.duration_ms: <execution time>
     // - database.result_count: <number of users>
     // - database.success: true
-    
+
     vision.set("total_users", users.length);
     console.log(`Found ${users.length} users\n`);
   });
@@ -58,7 +58,7 @@ async function main() {
         name: "John Doe",
       },
     });
-    
+
     vision.set("user_id", newUser.id);
     vision.set("user_email", newUser.email);
     console.log(`Created user: ${newUser.email}\n`);
@@ -74,7 +74,7 @@ async function main() {
         },
       },
     });
-    
+
     vision.set("found_user", !!user);
     if (user) {
       vision.set("user_id", user.id);
@@ -95,7 +95,7 @@ async function main() {
         updatedAt: new Date(),
       },
     });
-    
+
     vision.set("updated_count", result.count);
     console.log(`Updated ${result.count} users\n`);
   });
@@ -110,16 +110,16 @@ async function main() {
           name: "Transaction User",
         },
       });
-      
+
       // Each operation within the transaction is also tracked!
       const count = await tx.user.count();
-      
+
       vision.set("transaction_user_id", user.id);
       vision.set("total_users_after_transaction", count);
-      
+
       return { user, count };
     });
-    
+
     console.log(`Transaction completed. Total users: ${result.count}\n`);
   });
 
@@ -133,7 +133,7 @@ async function main() {
           name: "Duplicate User",
         },
       });
-      
+
       // Try to create again with same email (assuming unique constraint)
       await prisma.user.create({
         data: {
@@ -146,7 +146,7 @@ async function main() {
       // - database.success: false
       // - database.error: <error message>
       // - database.duration_ms: <execution time>
-      
+
       vision.set("error_type", "unique_constraint_violation");
       console.log("Error captured by Vision (this is expected)\n");
     }
@@ -156,7 +156,7 @@ async function main() {
   await vision.observe("example.raw-query", async () => {
     console.log("Running raw query...");
     const users = await prisma.$queryRaw`SELECT COUNT(*) as count FROM "User"`;
-    
+
     vision.set("raw_query_result", users);
     console.log(`Raw query completed\n`);
   });

@@ -4,7 +4,6 @@ import { describe, test, expect, vi, beforeEach } from "vitest";
 
 import { createVisionMiddleware } from "../src/middleware";
 
-
 describe("Vision Express Integration", () => {
   let mockExporter: VisionExporter;
 
@@ -64,4 +63,4 @@ describe("Vision Express Integration", () => {
 
     expect(typeof middleware).toBe("function");
   });
-}); 
+});

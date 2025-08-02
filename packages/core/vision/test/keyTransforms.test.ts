@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
 
-import { 
-  transformKey, 
-  transformObjectKeys, 
+import {
+  transformKey,
+  transformObjectKeys,
   transformMapKeys,
-  type CasingStyle 
+  type CasingStyle,
 } from "../src/utils/keyTransforms";
 
 describe("transformKey", () => {
@@ -136,13 +136,13 @@ describe("transformObjectKeys", () => {
     const input = {
       userId: "123",
       firstName: "John",
-      lastLoginAt: "2023-01-01"
+      lastLoginAt: "2023-01-01",
     };
 
     const expected = {
       user_id: "123",
       first_name: "John",
-      last_login_at: "2023-01-01"
+      last_login_at: "2023-01-01",
     };
 
     expect(transformObjectKeys(input, "snake_case")).toEqual(expected);
@@ -156,9 +156,9 @@ describe("transformObjectKeys", () => {
         lastName: "Doe",
         contactInfo: {
           emailAddress: "john@example.com",
-          phoneNumber: "555-1234"
-        }
-      }
+          phoneNumber: "555-1234",
+        },
+      },
     };
 
     const expected = {
@@ -168,9 +168,9 @@ describe("transformObjectKeys", () => {
         last_name: "Doe",
         contact_info: {
           email_address: "john@example.com",
-          phone_number: "555-1234"
-        }
-      }
+          phone_number: "555-1234",
+        },
+      },
     };
 
     expect(transformObjectKeys(input, "snake_case")).toEqual(expected);
@@ -180,15 +180,15 @@ describe("transformObjectKeys", () => {
     const input = {
       userList: [
         { firstName: "John", lastName: "Doe" },
-        { firstName: "Jane", lastName: "Smith" }
-      ]
+        { firstName: "Jane", lastName: "Smith" },
+      ],
     };
 
     const expected = {
       user_list: [
         { first_name: "John", last_name: "Doe" },
-        { first_name: "Jane", last_name: "Smith" }
-      ]
+        { first_name: "Jane", last_name: "Smith" },
+      ],
     };
 
     expect(transformObjectKeys(input, "snake_case")).toEqual(expected);
@@ -202,7 +202,7 @@ describe("transformObjectKeys", () => {
       metadata: null,
       tags: ["admin", "user"],
       createdAt: new Date("2023-01-01"),
-      processData: () => "test"
+      processData: () => "test",
     };
 
     const result = transformObjectKeys(input, "snake_case") as any;
@@ -227,7 +227,7 @@ describe("transformObjectKeys", () => {
   it("should not transform when style is 'none'", () => {
     const input = {
       userId: "123",
-      userProfile: { firstName: "John" }
+      userProfile: { firstName: "John" },
     };
 
     expect(transformObjectKeys(input, "none")).toEqual(input);
@@ -239,7 +239,7 @@ describe("transformMapKeys", () => {
     const input = new Map<string, unknown>([
       ["userId", "123"],
       ["firstName", "John"],
-      ["userProfile", { lastName: "Doe" }]
+      ["userProfile", { lastName: "Doe" }],
     ]);
 
     const result = transformMapKeys(input, "snake_case");
@@ -252,12 +252,15 @@ describe("transformMapKeys", () => {
 
   it("should transform values recursively", () => {
     const input = new Map<string, unknown>([
-      ["userProfile", {
-        firstName: "John",
-        contactDetails: {
-          emailAddress: "john@example.com"
-        }
-      }]
+      [
+        "userProfile",
+        {
+          firstName: "John",
+          contactDetails: {
+            emailAddress: "john@example.com",
+          },
+        },
+      ],
     ]);
 
     const result = transformMapKeys(input, "snake_case");

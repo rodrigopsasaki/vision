@@ -10,7 +10,7 @@ describe("normalizeContext", () => {
     name: "test.operation",
     scope: "http",
     source: "express",
-    data: new Map<string, unknown>()
+    data: new Map<string, unknown>(),
   };
 
   describe("when normalization is disabled", () => {
@@ -18,15 +18,15 @@ describe("normalizeContext", () => {
       const config: NormalizationConfig = {
         enabled: false,
         keyCasing: "snake_case",
-        deep: true
+        deep: true,
       };
 
       const context = {
         ...baseContext,
         data: new Map<string, unknown>([
           ["userId", "123"],
-          ["userProfile", { firstName: "John" }]
-        ])
+          ["userProfile", { firstName: "John" }],
+        ]),
       };
 
       const result = normalizeContext(context, config);
@@ -42,7 +42,7 @@ describe("normalizeContext", () => {
       const config: NormalizationConfig = {
         enabled: true,
         keyCasing: "snake_case",
-        deep: true
+        deep: true,
       };
 
       const context = {
@@ -50,8 +50,8 @@ describe("normalizeContext", () => {
         data: new Map<string, unknown>([
           ["userId", "123"],
           ["firstName", "John"],
-          ["isActive", true]
-        ])
+          ["isActive", true],
+        ]),
       };
 
       const result = normalizeContext(context, config);
@@ -69,7 +69,7 @@ describe("normalizeContext", () => {
       const config: NormalizationConfig = {
         enabled: true,
         keyCasing: "camelCase",
-        deep: true
+        deep: true,
       };
 
       const context = {
@@ -77,8 +77,8 @@ describe("normalizeContext", () => {
         data: new Map<string, unknown>([
           ["user_id", "123"],
           ["first_name", "John"],
-          ["is_active", true]
-        ])
+          ["is_active", true],
+        ]),
       };
 
       const result = normalizeContext(context, config);
@@ -93,15 +93,15 @@ describe("normalizeContext", () => {
       const config: NormalizationConfig = {
         enabled: true,
         keyCasing: "kebab-case",
-        deep: true
+        deep: true,
       };
 
       const context = {
         ...baseContext,
         data: new Map<string, unknown>([
           ["userId", "123"],
-          ["firstName", "John"]
-        ])
+          ["firstName", "John"],
+        ]),
       };
 
       const result = normalizeContext(context, config);
@@ -114,15 +114,15 @@ describe("normalizeContext", () => {
       const config: NormalizationConfig = {
         enabled: true,
         keyCasing: "PascalCase",
-        deep: true
+        deep: true,
       };
 
       const context = {
         ...baseContext,
         data: new Map<string, unknown>([
           ["userId", "123"],
-          ["firstName", "John"]
-        ])
+          ["firstName", "John"],
+        ]),
       };
 
       const result = normalizeContext(context, config);
@@ -137,21 +137,24 @@ describe("normalizeContext", () => {
       const config: NormalizationConfig = {
         enabled: true,
         keyCasing: "snake_case",
-        deep: true
+        deep: true,
       };
 
       const context = {
         ...baseContext,
         data: new Map<string, unknown>([
-          ["userProfile", {
-            firstName: "John",
-            lastName: "Doe",
-            contactInfo: {
-              emailAddress: "john@example.com",
-              phoneNumber: "555-1234"
-            }
-          }]
-        ])
+          [
+            "userProfile",
+            {
+              firstName: "John",
+              lastName: "Doe",
+              contactInfo: {
+                emailAddress: "john@example.com",
+                phoneNumber: "555-1234",
+              },
+            },
+          ],
+        ]),
       };
 
       const result = normalizeContext(context, config);
@@ -167,17 +170,20 @@ describe("normalizeContext", () => {
       const config: NormalizationConfig = {
         enabled: true,
         keyCasing: "snake_case",
-        deep: true
+        deep: true,
       };
 
       const context = {
         ...baseContext,
         data: new Map<string, unknown>([
-          ["userList", [
-            { firstName: "John", lastName: "Doe" },
-            { firstName: "Jane", lastName: "Smith" }
-          ]]
-        ])
+          [
+            "userList",
+            [
+              { firstName: "John", lastName: "Doe" },
+              { firstName: "Jane", lastName: "Smith" },
+            ],
+          ],
+        ]),
       };
 
       const result = normalizeContext(context, config);
@@ -193,17 +199,20 @@ describe("normalizeContext", () => {
       const config: NormalizationConfig = {
         enabled: true,
         keyCasing: "snake_case",
-        deep: false
+        deep: false,
       };
 
       const context = {
         ...baseContext,
         data: new Map<string, unknown>([
-          ["userProfile", {
-            firstName: "John",
-            lastName: "Doe"
-          }]
-        ])
+          [
+            "userProfile",
+            {
+              firstName: "John",
+              lastName: "Doe",
+            },
+          ],
+        ]),
       };
 
       const result = normalizeContext(context, config);
@@ -226,7 +235,7 @@ describe("normalizeContext", () => {
       const config: NormalizationConfig = {
         enabled: true,
         keyCasing: "snake_case",
-        deep: true
+        deep: true,
       };
 
       const testDate = new Date("2023-01-01");
@@ -243,16 +252,19 @@ describe("normalizeContext", () => {
           ["createdAt", testDate],
           ["processData", testFunction],
           ["emptyObject", {}],
-          ["nestedData", {
-            stringValue: "test",
-            numberValue: 123,
-            booleanValue: true,
-            nullValue: null,
-            arrayValue: [1, 2, 3],
-            dateValue: testDate,
-            functionValue: testFunction
-          }]
-        ])
+          [
+            "nestedData",
+            {
+              stringValue: "test",
+              numberValue: 123,
+              booleanValue: true,
+              nullValue: null,
+              arrayValue: [1, 2, 3],
+              dateValue: testDate,
+              functionValue: testFunction,
+            },
+          ],
+        ]),
       };
 
       const result = normalizeContext(context, config);
@@ -282,12 +294,12 @@ describe("normalizeContext", () => {
       const config: NormalizationConfig = {
         enabled: true,
         keyCasing: "snake_case",
-        deep: true
+        deep: true,
       };
 
       const context = {
         ...baseContext,
-        data: new Map<string, unknown>([["userId", "123"]])
+        data: new Map<string, unknown>([["userId", "123"]]),
       };
 
       const result = normalizeContext(context, config);
@@ -303,12 +315,12 @@ describe("normalizeContext", () => {
       const config: NormalizationConfig = {
         enabled: true,
         keyCasing: "snake_case",
-        deep: true
+        deep: true,
       };
 
       const context = {
         ...baseContext,
-        data: new Map<string, unknown>([["userId", "123"]])
+        data: new Map<string, unknown>([["userId", "123"]]),
       };
 
       const result = normalizeContext(context, config);
@@ -323,12 +335,12 @@ describe("normalizeContext", () => {
       const config: NormalizationConfig = {
         enabled: true,
         keyCasing: "snake_case",
-        deep: true
+        deep: true,
       };
 
       const context = {
         ...baseContext,
-        data: new Map()
+        data: new Map(),
       };
 
       const result = normalizeContext(context, config);
@@ -340,15 +352,15 @@ describe("normalizeContext", () => {
       const config: NormalizationConfig = {
         enabled: true,
         keyCasing: "snake_case",
-        deep: true
+        deep: true,
       };
 
       const context = {
         ...baseContext,
         data: new Map<string, unknown>([
           ["undefinedValue", undefined],
-          ["nullValue", null]
-        ])
+          ["nullValue", null],
+        ]),
       };
 
       const result = normalizeContext(context, config);
@@ -361,7 +373,7 @@ describe("normalizeContext", () => {
       const config: NormalizationConfig = {
         enabled: true,
         keyCasing: "snake_case",
-        deep: true
+        deep: true,
       };
 
       const circularObj: any = { userName: "test" };
@@ -369,13 +381,13 @@ describe("normalizeContext", () => {
 
       const context = {
         ...baseContext,
-        data: new Map<string, unknown>([["circularData", circularObj]])
+        data: new Map<string, unknown>([["circularData", circularObj]]),
       };
 
       // This should not throw an error
       const result = normalizeContext(context, config);
       const data = result.data.get("circular_data") as any;
-      
+
       expect(data.user_name).toBe("test");
       // The circular reference is preserved but points to the original object
       // to prevent infinite loops during transformation

@@ -9,39 +9,39 @@ export type { VisionRequest, VisionResponse, VisionExpressOptions };
 
 /**
  * Creates a Vision Express middleware that automatically creates contexts for HTTP requests.
- * 
+ *
  * This middleware wraps each request in a Vision context, automatically capturing
  * request/response metadata and providing easy access to the context throughout
  * the request lifecycle.
- * 
+ *
  * @param options - Configuration options for the middleware
  * @returns Express middleware function
- * 
+ *
  * @example
  * ```typescript
  * import express from 'express';
  * import { createVisionMiddleware } from '@rodrigopsasaki/vision-express';
- * 
+ *
  * const app = express();
- * 
+ *
  * // Basic usage - just works out of the box
  * app.use(createVisionMiddleware());
- * 
+ *
  * // Advanced usage with custom options
  * app.use(createVisionMiddleware({
  *   captureBody: true,
  *   excludeRoutes: ["/health", "/metrics"],
  *   extractUser: (req) => req.user,
  * }));
- * 
+ *
  * app.get('/users/:id', async (req, res) => {
  *   // Access the Vision context
  *   const ctx = req.visionContext;
- *   
+ *
  *   // Add custom data to the context
  *   vision.set('user_id', req.params.id);
  *   vision.set('operation', 'get_user');
- *   
+ *
  *   // Your route logic here...
  *   const user = await getUser(req.params.id);
  *   res.json(user);
@@ -106,7 +106,7 @@ export function createVisionMiddleware(options: VisionExpressOptions = {}) {
 
         // Capture response metadata on finish
         const originalEnd = res.end;
-        res.end = function(chunk?: any, encoding?: any, cb?: any) {
+        res.end = function (chunk?: any, encoding?: any, cb?: any) {
           const responseMetadata = extractResponseMetadata(res, startTime);
           vision.set("response", responseMetadata);
           return originalEnd.call(this, chunk, encoding, cb);
@@ -114,24 +114,24 @@ export function createVisionMiddleware(options: VisionExpressOptions = {}) {
 
         // Execute the rest of the middleware chain
         next();
-      }
+      },
     );
   };
 }
 
 /**
  * Simple one-liner middleware - just works out of the box.
- * 
+ *
  * This is the recommended default middleware for most applications.
- * 
+ *
  * @param options - Optional configuration overrides
  * @returns Express middleware function
- * 
+ *
  * @example
  * ```typescript
  * import express from 'express';
  * import { visionMiddleware } from '@rodrigopsasaki/vision-express';
- * 
+ *
  * const app = express();
  * app.use(visionMiddleware());
  * ```
@@ -142,16 +142,16 @@ export function visionMiddleware(options: VisionExpressOptions = {}) {
 
 /**
  * Creates a minimal Vision middleware with no Express metadata capture.
- * 
+ *
  * Perfect for when you want Vision context but no Express metadata clutter.
- * 
+ *
  * @returns Express middleware function
- * 
+ *
  * @example
  * ```typescript
  * import express from 'express';
  * import { createMinimalVisionMiddleware } from '@rodrigopsasaki/vision-express';
- * 
+ *
  * const app = express();
  * app.use(createMinimalVisionMiddleware());
  * ```
@@ -166,17 +166,17 @@ export function createMinimalVisionMiddleware() {
 
 /**
  * Creates a comprehensive Vision middleware that captures all available data.
- * 
+ *
  * This middleware captures everything including request bodies, which should
  * be used carefully in production environments.
- * 
+ *
  * @returns Express middleware function
- * 
+ *
  * @example
  * ```typescript
  * import express from 'express';
  * import { createComprehensiveVisionMiddleware } from '@rodrigopsasaki/vision-express';
- * 
+ *
  * const app = express();
  * app.use(createComprehensiveVisionMiddleware());
  * ```
@@ -191,16 +191,16 @@ export function createComprehensiveVisionMiddleware() {
 
 /**
  * Creates a secure Vision middleware with extra security redaction.
- * 
+ *
  * Perfect for high-security applications with extra protection.
- * 
+ *
  * @returns Express middleware function
- * 
+ *
  * @example
  * ```typescript
  * import express from 'express';
  * import { createSecureVisionMiddleware } from '@rodrigopsasaki/vision-express';
- * 
+ *
  * const app = express();
  * app.use(createSecureVisionMiddleware());
  * ```
@@ -210,7 +210,11 @@ export function createSecureVisionMiddleware() {
     captureHeaders: false,
     captureQueryParams: false,
     captureBody: false,
-    redactHeaders: [...DEFAULT_VISION_EXPRESS_OPTIONS.redactHeaders, "x-forwarded-for", "x-real-ip"],
+    redactHeaders: [
+      ...DEFAULT_VISION_EXPRESS_OPTIONS.redactHeaders,
+      "x-forwarded-for",
+      "x-real-ip",
+    ],
     redactQueryParams: [...DEFAULT_VISION_EXPRESS_OPTIONS.redactQueryParams, "session", "sid"],
     redactBodyFields: [...DEFAULT_VISION_EXPRESS_OPTIONS.redactBodyFields, "session", "sid"],
   });
@@ -219,7 +223,7 @@ export function createSecureVisionMiddleware() {
 // Helper functions
 function shouldExcludeRoute(req: VisionRequest, excludeRoutes: string[]): boolean {
   const path = req.path.toLowerCase();
-  return excludeRoutes.some(route => path.includes(route.toLowerCase()));
+  return excludeRoutes.some((route) => path.includes(route.toLowerCase()));
 }
 
 function extractCorrelationId(req: VisionRequest, headers: string[]): string | undefined {
@@ -276,4 +280,4 @@ function extractResponseMetadata(res: VisionResponse, startTime: number) {
     headers: res.getHeaders(),
     duration: Date.now() - startTime,
   };
-} 
+}

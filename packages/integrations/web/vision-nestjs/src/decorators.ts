@@ -10,12 +10,12 @@ import {
 
 /**
  * Decorator to configure Vision context behavior for a specific method or class.
- * 
+ *
  * When applied to a method, it overrides global Vision configuration for that specific method.
  * When applied to a class, it applies to all methods in that class (unless overridden at method level).
- * 
+ *
  * @param config - Vision context configuration
- * 
+ *
  * @example
  * ```typescript
  * @Controller('users')
@@ -31,7 +31,7 @@ import {
  *   async getUser(@Param('id') id: string) {
  *     return this.usersService.findById(id);
  *   }
- * 
+ *
  *   @Post()
  *   @VisionContext({
  *     name: 'user.create',
@@ -49,15 +49,15 @@ export function VisionContext(config: VisionContextConfig) {
 
 /**
  * Decorator to ignore Vision context creation for a specific method or class.
- * 
+ *
  * When applied to a method, Vision will skip creating a context for that method.
  * When applied to a class, Vision will skip all methods in that class.
- * 
+ *
  * This is useful for:
  * - Health check endpoints
  * - Internal utility methods
  * - High-frequency operations where observability overhead is not desired
- * 
+ *
  * @example
  * ```typescript
  * @Controller('health')
@@ -68,14 +68,14 @@ export function VisionContext(config: VisionContextConfig) {
  *     return { status: 'ok' };
  *   }
  * }
- * 
+ *
  * @Controller('users')
  * export class UsersController {
  *   @Get()
  *   async getUsers() {
  *     return this.usersService.findAll();
  *   }
- * 
+ *
  *   @Get('internal/cache-warmup')
  *   @VisionIgnore() // Ignore specific method
  *   async warmupCache() {
@@ -90,12 +90,12 @@ export function VisionIgnore() {
 
 /**
  * Decorator to configure what data Vision should capture for a specific method or class.
- * 
+ *
  * This allows fine-grained control over data capture at the method level,
  * overriding global configuration settings.
- * 
+ *
  * @param config - Vision capture configuration
- * 
+ *
  * @example
  * ```typescript
  * @Controller('users')
@@ -111,7 +111,7 @@ export function VisionIgnore() {
  *   async getUsers(@Query() query: GetUsersDto) {
  *     return this.usersService.findAll(query);
  *   }
- * 
+ *
  *   @Post()
  *   @VisionCapture({
  *     body: true,
@@ -122,7 +122,7 @@ export function VisionIgnore() {
  *   async createUser(@Body() createUserDto: CreateUserDto) {
  *     return this.usersService.create(createUserDto);
  *   }
- * 
+ *
  *   @Delete(':id')
  *   @VisionCapture({
  *     params: true,
@@ -141,12 +141,12 @@ export function VisionCapture(config: VisionCaptureConfig) {
 
 /**
  * Decorator to mark a method as a high-performance operation that should be tracked.
- * 
+ *
  * This is a convenience decorator that sets up Vision context with performance tracking enabled
  * and commonly used settings for performance-critical operations.
- * 
+ *
  * @param name - Optional custom name for the operation
- * 
+ *
  * @example
  * ```typescript
  * @Controller('analytics')
@@ -157,7 +157,7 @@ export function VisionCapture(config: VisionCaptureConfig) {
  *     // This will automatically track execution time, memory usage, and detect slow operations
  *     return this.analyticsService.generateReport(reportConfig);
  *   }
- * 
+ *
  *   @Get('dashboard/:id')
  *   @VisionPerformance() // Uses default naming: http.AnalyticsController.getDashboard
  *   async getDashboard(@Param('id') id: string) {
@@ -177,12 +177,12 @@ export function VisionPerformance(name?: string) {
 
 /**
  * Decorator to mark a method as security-sensitive, enabling enhanced capture.
- * 
+ *
  * This decorator configures Vision to capture additional security-relevant information
  * while being careful not to capture sensitive data like passwords or tokens.
- * 
+ *
  * @param config - Optional additional configuration
- * 
+ *
  * @example
  * ```typescript
  * @Controller('auth')
@@ -196,7 +196,7 @@ export function VisionPerformance(name?: string) {
  *   async login(@Body() loginDto: LoginDto) {
  *     return this.authService.login(loginDto);
  *   }
- * 
+ *
  *   @Post('password-reset')
  *   @VisionSecurity()
  *   async resetPassword(@Body() resetDto: PasswordResetDto) {
@@ -229,9 +229,9 @@ export function VisionSecurity(config?: {
     VisionCapture({
       request: true,
       headers: false, // Headers might contain authorization tokens
-      body: false,    // Body might contain passwords
+      body: false, // Body might contain passwords
       query: true,
-      params: false,  // Params are usually fine, but being extra cautious
+      params: false, // Params are usually fine, but being extra cautious
       returns: false, // Response might contain tokens
       customFields: [
         ...(config?.captureUserAgent ? ["user_agent"] : []),
@@ -245,12 +245,12 @@ export function VisionSecurity(config?: {
 
 /**
  * Decorator to configure a method for audit logging with Vision.
- * 
+ *
  * This decorator ensures that critical business operations are properly tracked
  * with all necessary audit information while maintaining security.
- * 
+ *
  * @param config - Audit configuration
- * 
+ *
  * @example
  * ```typescript
  * @Controller('admin')
@@ -265,7 +265,7 @@ export function VisionSecurity(config?: {
  *   async deleteUser(@Param('id') userId: string) {
  *     return this.adminService.deleteUser(userId);
  *   }
- * 
+ *
  *   @Post('system/maintenance')
  *   @VisionAudit({
  *     operation: 'system_maintenance',

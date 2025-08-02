@@ -282,8 +282,7 @@ export const DEFAULT_VISION_KOA_OPTIONS: Required<VisionKoaOptions> = {
   captureTiming: true,
   captureKoaMetadata: true,
 
-  contextNameGenerator: (ctx) => 
-    `${ctx.method.toLowerCase()}.${ctx.path}`,
+  contextNameGenerator: (ctx) => `${ctx.method.toLowerCase()}.${ctx.path}`,
 
   shouldExcludeRoute: (ctx) => {
     const path = ctx.path.toLowerCase();
@@ -300,19 +299,21 @@ export const DEFAULT_VISION_KOA_OPTIONS: Required<VisionKoaOptions> = {
 
   extractUser: (ctx) => {
     // Try to extract user from common authentication patterns
-    return (ctx as any).user || 
-           (ctx as any).state?.user ||
-           ctx.headers["x-user-id"] ||
-           ctx.headers["x-user"] ||
-           undefined;
+    return (
+      (ctx as any).user ||
+      (ctx as any).state?.user ||
+      ctx.headers["x-user-id"] ||
+      ctx.headers["x-user"] ||
+      undefined
+    );
   },
 
   extractCorrelationId: (ctx) => {
     return (
-      ctx.headers["x-correlation-id"] as string ||
-      ctx.headers["x-request-id"] as string ||
-      ctx.headers["x-trace-id"] as string ||
-      ctx.headers["x-transaction-id"] as string
+      (ctx.headers["x-correlation-id"] as string) ||
+      (ctx.headers["x-request-id"] as string) ||
+      (ctx.headers["x-trace-id"] as string) ||
+      (ctx.headers["x-transaction-id"] as string)
     );
   },
 
@@ -328,16 +329,9 @@ export const DEFAULT_VISION_KOA_OPTIONS: Required<VisionKoaOptions> = {
     "x-api-key",
     "x-auth-token",
     "x-session-token",
-    "x-csrf-token"
+    "x-csrf-token",
   ],
-  redactQueryParams: [
-    "token",
-    "key",
-    "secret",
-    "password",
-    "auth",
-    "api_key"
-  ],
+  redactQueryParams: ["token", "key", "secret", "password", "auth", "api_key"],
   redactBodyFields: [
     "password",
     "ssn",
@@ -347,7 +341,7 @@ export const DEFAULT_VISION_KOA_OPTIONS: Required<VisionKoaOptions> = {
     "api_key",
     "apiKey",
     "private_key",
-    "privateKey"
+    "privateKey",
   ],
 
   correlationIdHeaders: [
@@ -356,7 +350,7 @@ export const DEFAULT_VISION_KOA_OPTIONS: Required<VisionKoaOptions> = {
     "x-trace-id",
     "x-transaction-id",
     "correlation-id",
-    "request-id"
+    "request-id",
   ],
 
   performance: {
