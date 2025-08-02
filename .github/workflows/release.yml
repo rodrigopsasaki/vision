@@ -86,19 +86,13 @@ jobs:
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
 
-      - name: Version packages and create changelog
+      - name: Create release
         run: |
           DRY_RUN="${{ github.event.inputs.dryRun || 'false' }}"
           if [ "$DRY_RUN" = "true" ]; then
-            npx nx release version --dry-run
-            npx nx release changelog --dry-run
+            npx nx release --dry-run --skip-publish
           else
-            VERSION=$(npx nx release version --verbose 2>&1 | grep -o "New version: [0-9]\+\.[0-9]\+\.[0-9]\+" | cut -d' ' -f3 | head -1)
-            if [ -n "$VERSION" ]; then
-              npx nx release changelog $VERSION
-            else
-              npx nx release changelog
-            fi
+            npx nx release --skip-publish
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
