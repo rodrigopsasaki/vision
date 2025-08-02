@@ -78,7 +78,7 @@
     "micromatch": "^4.0.8"
   },
   "peerDependencies": {
-    "@rodrigopsasaki/vision": "^0.3.0",
+    "@rodrigopsasaki/vision": "0.2.0",
     "fastify": "^4.0.0 || ^5.0.0"
   }
 }
