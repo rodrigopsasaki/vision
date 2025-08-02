@@ -1,7 +1,7 @@
 {
   "name": "@rodrigopsasaki/vision-fastify",
   "type": "module",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "High-performance Fastify plugin for seamless Vision context integration",
   "license": "MIT",
   "author": "Rodrigo Sasaki",
