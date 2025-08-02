@@ -1,3 +1,14 @@
+## 0.3.0 (2025-08-02)
+
+### 🚀 Features
+
+- **core:** enhance documentation with clarity on context importance ([9d543ed](https://github.com/rodrigopsasaki/vision/commit/9d543ed))
+- **release:** test automated release workflow ([3a48e7c](https://github.com/rodrigopsasaki/vision/commit/3a48e7c))
+
+### ❤️ Thank You
+
+- Rodrigo Sasaki @rodrigopsasaki
+
 ## 0.2.0 (2025-08-02)
 
 ### 🚀 Features
