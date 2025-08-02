@@ -26,13 +26,13 @@ jobs:
         run: pnpm install
 
       - name: Build
-        run: pnpm exec turbo run build
+        run: npm run build
 
       - name: Lint
-        run: pnpm exec turbo run lint
+        run: npm run lint
 
       - name: Test
-        run: pnpm exec turbo run test
+        run: npm run test
 
       - name: Spellcheck
-        run: pnpm exec turbo run spellcheck
+        run: npm run spellcheck
