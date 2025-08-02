@@ -8,6 +8,13 @@
       "workspaceChangelog": {
         "createRelease": "github"
       }
+    },
+    "git": {
+      "commit": true,
+      "commitMessage": "chore(release): version {version} [skip ci]",
+      "tag": true,
+      "tagMessage": "v{version}",
+      "push": true
     }
   },
   "targetDefaults": {

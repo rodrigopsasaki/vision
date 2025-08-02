@@ -66,6 +66,7 @@ jobs:
         with:
           # This makes Actions fetch all Git history so that Nx can use it for affected detection
           fetch-depth: 0
+          # Use PAT or GITHUB_TOKEN to allow pushing commits
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Enable pnpm via corepack
@@ -83,8 +84,8 @@ jobs:
 
       - name: Git configuration
         run: |
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Action"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
 
       - name: Create release
         run: |
