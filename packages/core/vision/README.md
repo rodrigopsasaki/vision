@@ -18,8 +18,9 @@
 You need to know:
 
 - What just happened
-- What data was involved
+- What data was involved  
 - What the outcome was
+- Why it matters
 
 But most systems log like this:
 
