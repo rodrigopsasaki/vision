@@ -1,201 +1,115 @@
-# Vision
+![CI](https://github.com/rodrigopsasaki/vision/actions/workflows/release.yml/badge.svg)
+![NPM Version](https://img.shields.io/npm/v/@rodrigopsasaki/vision?logo=npm)
+![License](https://img.shields.io/github/license/rodrigopsasaki/vision)
+![TypeScript](https://img.shields.io/badge/TypeScript-Strict-blue.svg)
+
+# vision
 
 > Structured observability, modeled around intent — not output.
 
-A structured observability framework for Node.js applications that treats production monitoring as a first-class citizen, not an afterthought.
+---
 
-## What is Vision?
+## You don't need more logs, you need context.
 
-You don't need more logs, you need **context**.
+Vision is a structured observability framework for Node.js that fundamentally changes how you think about production monitoring. Instead of scattered log lines, you get rich, contextual events that tell the complete story of what happened in your application.
 
-You need to know:
-
-- What just happened
-- What data was involved
-- What the outcome was
-
-But most systems log like this:
+### The problem with traditional logging
 
 ```typescript
-console.log("starting cart job");
-console.log("loaded cart", cart.id);
-console.log("charging", cart.total);
-console.log("done", { status: "ok" });
+// Traditional approach - scattered, disconnected logs
+console.log("processing payment");
+console.log("payment amount:", amount);
+console.log("payment failed");
+console.log("error:", error.message);
 ```
 
-This tells a story — but it's whispering. No IDs. No continuity. Just bursts of text into the void.
+This produces noise. Four separate log entries, no correlation, no context about the user, the request, or what led to this failure.
 
-**Vision fixes this by giving you structured context instead of scattered logs.**
+### The Vision approach
 
-## Vision Core - Getting Started
+```typescript
+// Vision - one rich, contextual event
+await vision.observe("payment.process", async () => {
+  vision.set("user_id", user.id);
+  vision.set("amount", amount);
+  vision.set("currency", "USD");
+  
+  try {
+    const result = await paymentProcessor.charge(amount);
+    vision.set("charge_id", result.id);
+    vision.set("status", "success");
+  } catch (error) {
+    vision.set("status", "failed");
+    vision.set("error", error.message);
+    throw error;
+  }
+});
+```
 
-Install the core package first:
+This produces **one** structured event with complete context:
+
+```json
+{
+  "name": "payment.process",
+  "timestamp": "2025-01-15T10:30:00.000Z",
+  "duration": 1250,
+  "data": {
+    "user_id": "user_123",
+    "amount": 99.99,
+    "currency": "USD",
+    "status": "failed",
+    "error": "Card declined"
+  }
+}
+```
+
+## Quick Start
 
 ```bash
 npm install @rodrigopsasaki/vision
 ```
 
-Vision works without any configuration. Here's your first example:
+Vision works out of the box with zero configuration:
 
 ```typescript
 import { vision } from "@rodrigopsasaki/vision";
 
-await vision.observe("cart.process", async () => {
-  vision.set("user_id", "u123");
-  vision.set("cart_id", "c789");
-
-  // Your business logic here
-  const result = await processCart();
-  vision.set("result", result.status);
-});
-```
-
-That's it. No setup. No boilerplate. Vision runs with a default console exporter out of the box.
-
-This produces a clean canonical event:
-
-```json
-{
-  "name": "cart.process",
-  "timestamp": "2025-01-15T10:30:00.000Z",
-  "data": {
-    "user_id": "u123",
-    "cart_id": "c789",
-    "result": "success"
-  }
-}
-```
-
-## Core Concepts & Examples
-
-### Working with Context
-
-Vision gives you a few simple tools to build rich context:
-
-```typescript
-// Set simple values
-vision.set("user_id", "u123");
-vision.set("operation", "checkout");
-
-// Build arrays
-vision.push("events", "cart_loaded");
-vision.push("events", "payment_processed");
-
-// Build objects
-vision.merge("metadata", { version: "1.2.3" });
-vision.merge("metadata", { region: "us-east-1" });
-
-// Retrieve values
-const userId = vision.get("user_id"); // 'u123'
-```
-
-Everything you set is scoped to the active `observe()` block. Accessing context outside that block throws — by design.
-
-### Real-World Example
-
-Here's what Vision looks like in real code:
-
-```typescript
-await vision.observe("order.fulfillment", async () => {
+// That's it. Start observing.
+await vision.observe("user.signup", async () => {
+  vision.set("email", email);
+  
+  const user = await createUser(email);
   vision.set("user_id", user.id);
-  vision.set("order_id", order.id);
-
-  await fulfillOrder(order);
-});
-
-// fulfillment.ts - Notice: no context passing needed
-async function fulfillOrder(order) {
-  await pickItems(order);
-  await packItems(order);
-  await shipOrder(order);
-}
-
-async function pickItems(order) {
-  // ...picking logic...
-  vision.push("events", "picked");
-}
-
-async function packItems(order) {
-  // ...packing logic...
-  vision.push("events", "packed");
-  vision.merge("dimensions", { weight: "2.1kg" });
-}
-
-async function shipOrder(order) {
-  // ...shipping logic...
-  vision.push("events", "shipped");
-  vision.merge("shipment", {
-    carrier: "DHL",
-    tracking: "abc123",
-  });
-}
-```
-
-You don't pass context around. You don't log manually. You just describe what happened.
-
-Vision collects it — then emits exactly one event:
-
-```json
-{
-  "name": "order.fulfillment",
-  "timestamp": "2025-01-15T10:30:00.000Z",
-  "data": {
-    "user_id": "user123",
-    "order_id": "ord456",
-    "events": ["picked", "packed", "shipped"],
-    "dimensions": { "weight": "2.1kg" },
-    "shipment": { "carrier": "DHL", "tracking": "abc123" }
-  }
-}
-```
-
-### Custom Exporters
-
-By default, Vision logs to the console. But you can register your own exporters:
-
-```typescript
-vision.init({
-  exporters: [
-    {
-      name: "datadog",
-      success: (ctx) => sendToDatadog(ctx),
-      error: (ctx, err) => sendErrorToDatadog(ctx, err),
-    },
-  ],
+  
+  await sendWelcomeEmail(user);
+  vision.set("welcome_email", "sent");
 });
 ```
 
-## Vision Ecosystem
+## Framework Integrations
 
-Vision provides a comprehensive set of integrations to instrument your entire Node.js stack:
+Vision provides first-class integrations for popular Node.js frameworks:
 
-### Web Framework Integrations
-
-Automatically create Vision contexts for every HTTP request:
-
-#### Express.js
-
+### Express.js
 ```bash
 npm install @rodrigopsasaki/vision-express
 ```
 
 ```typescript
-import { vision } from "@rodrigopsasaki/vision";
 import { visionMiddleware } from "@rodrigopsasaki/vision-express";
 
-app.use(visionMiddleware()); // Every endpoint is now traced
+app.use(visionMiddleware()); // Automatic request tracing
 
-app.get("/users/:id", async (req, res) => {
-  vision.set("user_id", req.params.id);
-  vision.set("operation", "get_user");
-
-  const user = await getUser(req.params.id);
-  res.json(user);
+app.post("/api/orders", async (req, res) => {
+  vision.set("user_id", req.user.id);
+  vision.set("order_total", req.body.total);
+  
+  const order = await createOrder(req.body);
+  res.json(order);
 });
 ```
 
-#### Fastify
-
+### Fastify
 ```bash
 npm install @rodrigopsasaki/vision-fastify
 ```
@@ -204,15 +118,9 @@ npm install @rodrigopsasaki/vision-fastify
 import { visionPlugin } from "@rodrigopsasaki/vision-fastify";
 
 await fastify.register(visionPlugin);
-
-fastify.get("/users/:id", async (request, reply) => {
-  vision.set("user_id", request.params.id);
-  return getUser(request.params.id);
-});
 ```
 
-#### Koa
-
+### Koa
 ```bash
 npm install @rodrigopsasaki/vision-koa
 ```
@@ -221,15 +129,9 @@ npm install @rodrigopsasaki/vision-koa
 import { visionMiddleware } from "@rodrigopsasaki/vision-koa";
 
 app.use(visionMiddleware());
-
-app.use(async (ctx) => {
-  vision.set("user_id", ctx.params.id);
-  ctx.body = await getUser(ctx.params.id);
-});
 ```
 
-#### NestJS
-
+### NestJS
 ```bash
 npm install @rodrigopsasaki/vision-nestjs
 ```
@@ -241,125 +143,154 @@ import { VisionModule } from "@rodrigopsasaki/vision-nestjs";
   imports: [VisionModule.forRoot()],
 })
 export class AppModule {}
-
-@Controller("users")
-export class UsersController {
-  @Get(":id")
-  async getUser(@Param("id") id: string) {
-    vision.set("user_id", id);
-    return await this.userService.getUser(id);
-  }
-}
 ```
 
-### Data Layer Integrations
+## Database Integrations
 
-Automatic observability for your database operations:
-
-#### Prisma ORM
-
+### Prisma
 ```bash
 npm install @rodrigopsasaki/vision-prisma
 ```
 
 ```typescript
-import { PrismaClient } from "@prisma/client";
 import { instrumentPrisma } from "@rodrigopsasaki/vision-prisma";
 
-// Just wrap your Prisma client - that's it!
+// Wrap your Prisma client - all queries are now observable
 const prisma = instrumentPrisma(new PrismaClient());
 
-// All database operations are now automatically tracked
+// Automatic tracking of operations, duration, and results
 const users = await prisma.user.findMany();
-// Vision captures: operation, duration, result count, success/failure
 ```
 
-### Exporters
+### TypeORM
+```bash
+npm install @rodrigopsasaki/vision-typeorm
+```
 
-Send your observability data to production monitoring platforms:
+```typescript
+import { VisionSubscriber } from "@rodrigopsasaki/vision-typeorm";
 
-#### Datadog
+// Register once in your data source
+dataSource.subscribers.push(new VisionSubscriber());
 
+// All queries now emit structured events
+```
+
+## Production Exporters
+
+### Datadog
 ```bash
 npm install @rodrigopsasaki/vision-datadog-exporter
 ```
 
 ```typescript
-import { vision } from "@rodrigopsasaki/vision";
 import { createDatadogExporter } from "@rodrigopsasaki/vision-datadog-exporter";
 
 vision.init({
   exporters: [
     createDatadogExporter({
       apiKey: process.env.DATADOG_API_KEY,
-      service: "my-service",
-      environment: "production",
-    }),
-  ],
+      service: "api-server",
+      environment: "production"
+    })
+  ]
 });
 ```
 
-## Framework Support Status
+## Core Concepts
 
-| Framework      | Package                                                                                        | Status       |
-| -------------- | ---------------------------------------------------------------------------------------------- | ------------ |
-| **Express.js** | [@rodrigopsasaki/vision-express](https://www.npmjs.com/package/@rodrigopsasaki/vision-express) | ✅ Published |
-| **Fastify**    | [@rodrigopsasaki/vision-fastify](https://www.npmjs.com/package/@rodrigopsasaki/vision-fastify) | ✅ Published |
-| **Koa**        | [@rodrigopsasaki/vision-koa](https://www.npmjs.com/package/@rodrigopsasaki/vision-koa)         | ✅ Published |
-| **NestJS**     | [@rodrigopsasaki/vision-nestjs](https://www.npmjs.com/package/@rodrigopsasaki/vision-nestjs)   | ✅ Published |
+### Context is King
+Vision automatically propagates context through your entire async call stack. No more passing correlation IDs or request context manually.
 
-## Monorepo Structure
+```typescript
+await vision.observe("api.request", async () => {
+  vision.set("request_id", req.id);
+  
+  // This context is available everywhere downstream
+  await serviceA.doWork();
+});
 
-This monorepo contains:
+// In serviceA.ts - no context passing needed!
+async function doWork() {
+  vision.set("service", "serviceA");
+  await serviceB.process();
+}
 
-### Core Framework
+// In serviceB.ts - still have access to everything
+async function process() {
+  const requestId = vision.get("request_id"); // Original request ID!
+  vision.set("processing_complete", true);
+}
+```
 
-- **[@rodrigopsasaki/vision](./packages/vision)** - Core observability framework
+### One Event, Complete Story
+Instead of hundreds of log lines, Vision emits one structured event per logical operation with all the context you need.
 
-### Framework Integrations
+### Performance First
+Vision uses Node.js AsyncLocalStorage for zero-overhead context propagation. The framework is designed to have minimal impact on your application's performance.
 
-- **[@rodrigopsasaki/vision-express](./packages/vision-express)** - Express.js middleware
-- **[@rodrigopsasaki/vision-fastify](./packages/vision-fastify)** - Fastify plugin with performance variants
-- **[@rodrigopsasaki/vision-koa](./packages/vision-koa)** - Koa async/await middleware
-- **[@rodrigopsasaki/vision-nestjs](./packages/vision-nestjs)** - NestJS module with decorators
+## Real-World Example
 
-### Exporters
+Here's Vision in a production e-commerce flow:
 
-- **[@rodrigopsasaki/vision-datadog-exporter](./packages/vision-datadog-exporter)** - Production-ready Datadog integration
+```typescript
+app.post("/checkout", async (req, res) => {
+  await vision.observe("checkout.process", async () => {
+    vision.set("user_id", req.user.id);
+    vision.set("cart_total", req.body.total);
+    
+    // Validate inventory
+    const available = await checkInventory(req.body.items);
+    vision.set("inventory_check", available ? "passed" : "failed");
+    
+    if (!available) {
+      throw new Error("Items out of stock");
+    }
+    
+    // Process payment
+    const payment = await processPayment(req.body.payment);
+    vision.set("payment_id", payment.id);
+    vision.set("payment_status", payment.status);
+    
+    // Create order
+    const order = await createOrder({
+      userId: req.user.id,
+      items: req.body.items,
+      paymentId: payment.id
+    });
+    vision.set("order_id", order.id);
+    
+    // Send confirmation
+    await sendOrderConfirmation(order);
+    vision.set("confirmation_sent", true);
+    
+    res.json({ orderId: order.id });
+  });
+});
+```
 
-## Features
+This produces one clean event with the complete checkout story - what was ordered, by whom, payment details, and whether it succeeded.
 
-✅ **Zero-configuration observability** - Set up once, trace everything  
-✅ **Framework-native integration** - Uses each framework's patterns  
-✅ **Production-ready exporters** - Built-in circuit breakers, retries, batching  
-✅ **Performance variants** - Minimal, comprehensive, and performance-optimized configs  
-✅ **Security-conscious** - Automatic sensitive data redaction  
-✅ **Microservice-ready** - Service mesh integration, distributed tracing  
-✅ **TypeScript-first** - Full type safety with excellent DX
+## 📚 Documentation
 
-## 📖 Complete Documentation
+Visit **[rodrigopsasaki.com/projects/vision](https://rodrigopsasaki.com/projects/vision)** for:
 
-**For comprehensive guides, advanced patterns, real-world examples, and detailed API reference, visit:**
-
-## 🌟 **[rodrigopsasaki.com/projects/vision](https://rodrigopsasaki.com/projects/vision)**
-
-The website includes:
-
-- **Framework-specific guides** for Express, Fastify, Koa, and NestJS
-- **Performance optimization** techniques and configurations
-- **Microservices patterns** with circuit breakers and service mesh
-- **Real-world examples** including authentication flows, e-commerce, and background jobs
-- **Production deployment** strategies and best practices
-- **Runnable code examples** for every framework and use case
+- Complete API reference
+- Framework-specific guides
+- Production deployment patterns
+- Performance optimization tips
+- Real-world examples
 
 ## Contributing
 
-This project follows a monorepo structure with [pnpm workspaces](https://pnpm.io/workspaces). To contribute:
+This is a monorepo managed with [pnpm](https://pnpm.io/) and [Nx](https://nx.dev/). 
 
 ```bash
-# Clone and install dependencies
+# Clone the repository
 git clone https://github.com/rodrigopsasaki/vision.git
 cd vision
+
+# Install dependencies
 pnpm install
 
 # Build all packages
@@ -368,10 +299,19 @@ pnpm build
 # Run tests
 pnpm test
 
-# Try the examples
-cd packages/vision-fastify/examples
-npx tsx basic-usage.ts
+# Run examples
+cd examples/express-example
+pnpm dev
 ```
+
+### Development Workflow
+
+We use conventional commits for automated releases:
+- `feat:` triggers minor version bump
+- `fix:` triggers patch version bump  
+- `BREAKING CHANGE:` triggers major version bump
+
+Push to main automatically releases new versions.
 
 ## 🙏 Acknowledgments
 
@@ -379,4 +319,5 @@ Special thanks to [Ryan McGrath](https://github.com/zoltrain), the brilliant Go-
 
 ## License
 
-MIT
+MIT © [Rodrigo Sasaki](https://github.com/rodrigopsasaki)
+
