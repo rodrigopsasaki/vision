@@ -5,22 +5,26 @@ import { createDatadogExporter, VisionDatadogExporter } from "../src/vision-data
 
 // Mock HTTP client and batch processor
 vi.mock("../src/http-client.js", () => ({
-  DatadogHttpClient: vi.fn().mockImplementation(() => ({
-    sendMetrics: vi.fn().mockResolvedValue(undefined),
-    sendLogs: vi.fn().mockResolvedValue(undefined),
-    sendTraces: vi.fn().mockResolvedValue(undefined),
-    sendEvents: vi.fn().mockResolvedValue(undefined),
-    getCircuitBreakerState: vi.fn().mockReturnValue("closed"),
-  })),
+  DatadogHttpClient: vi.fn().mockImplementation(function () {
+    return {
+      sendMetrics: vi.fn().mockResolvedValue(undefined),
+      sendLogs: vi.fn().mockResolvedValue(undefined),
+      sendTraces: vi.fn().mockResolvedValue(undefined),
+      sendEvents: vi.fn().mockResolvedValue(undefined),
+      getCircuitBreakerState: vi.fn().mockReturnValue("closed"),
+    };
+  }),
 }));
 vi.mock("../src/batch-processor.js", () => ({
-  BatchProcessor: vi.fn().mockImplementation(() => ({
-    add: vi.fn(),
-    flush: vi.fn().mockResolvedValue(undefined),
-    close: vi.fn().mockResolvedValue(undefined),
-    getQueueSize: vi.fn().mockReturnValue(0),
-    isCurrentlyProcessing: vi.fn().mockReturnValue(false),
-  })),
+  BatchProcessor: vi.fn().mockImplementation(function () {
+    return {
+      add: vi.fn(),
+      flush: vi.fn().mockResolvedValue(undefined),
+      close: vi.fn().mockResolvedValue(undefined),
+      getQueueSize: vi.fn().mockReturnValue(0),
+      isCurrentlyProcessing: vi.fn().mockReturnValue(false),
+    };
+  }),
 }));
 
 describe("VisionDatadogExporter", () => {
